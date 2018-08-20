@@ -18,7 +18,7 @@ use Adknown\ProxyScalyr\Utilities;
 
 abstract class aLogger
 {
-	const LOG_FOLDER = __DIR__ . "/var/log/myapp/";
+	const LOG_FOLDER = "/var/log/myapp/";
 	const BASE_LOGS = [
 		self::EVENT_EXCEPTION => ['exception_log.txt'],
 	];

@@ -1,2 +1,3 @@
 .idea/
 source/vendor/
+docker-container/scalyr/agent.d/api_key.json

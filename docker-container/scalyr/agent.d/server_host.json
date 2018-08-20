@@ -1,0 +1,19 @@
+{
+  "import_vars": [
+    "DOCKER_HOST_NAME",
+    "DOCKER_TIER",
+    "DOCKER_SYSTEM"
+  ],
+  // Fields describing this server. These fields are attached to each log message, and
+  // can be used to filter data from a particular server or group of servers.
+  server_attributes: {
+    // Fill in this field if you'd like to override the server's hostname.
+    // serverHost: "REPLACE THIS",
+
+    // You can add whatever additional fields you'd like.
+    // tier: "production"
+    serverHost: "$DOCKER_HOST_NAME",
+    tier: "$DOCKER_TIER",
+    system: "$DOCKER_SYSTEM"
+  }
+}

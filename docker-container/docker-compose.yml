@@ -2,29 +2,48 @@ version: '3.1'
 
 services:
   web:
-    container_name: visualization_portal_nginx
-    image: nginx:alpine
+    container_name: nginx
+    build: nginx/
     volumes:
       - "./nginx/nginx.conf:/etc/nginx/nginx.conf"
       - "./nginx/vhosts:/etc/nginx/conf.d/vhosts"
       - "../source:/var/www/html"
+      - log-infra-nginx:/var/log/nginx/
     ports:
       - "8000:80"
       - "8080:8080"
     depends_on:
       - php
   php:
-    container_name: visualization_portal_php
+    container_name: php
     build: php-fpm-debug/
     volumes:
       - "../source:/var/www/html"
+      - log-app:/var/log/myapp
     environment:
-      - LOCAL_DEV=1
-      - SCALYR_READ_KEY="yourkeyhere"
+      - SCALYR_READ_KEY=yourkeyhere
   grafana:
-    container_name: visualization_grafana
-    image: grafana/grafana:5.0.0
+    container_name: grafana
+    build: grafana/
     ports:
       - "3000:3000"
+    volumes:
+      - "./grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini"
+      - "../../grafana-scalyr-datasource-plugin:/var/lib/grafana/plugins/grafana-scalyr-datasource-plugin"
+  scalyr:
+    container_name: scalyr
+    image: scalyr/scalyr-docker-agent
+    volumes:
+    - ./scalyr/agent.d:/etc/scalyr-agent-2/agent.d
+    - /run/docker.sock:/var/scalyr/docker.sock
+    - log-app:/var/log/myapp/logs
+    - log-infra-nginx:/var/log/nginx
+    environment:
+    - DOCKER_HOST_NAME=grafanaProxy
+    - DOCKER_TIER=dev
+    - DOCKER_SYSTEM=grafana
+volumes:
+  log-app: ~
+  log-infra-nginx: ~
 
 
