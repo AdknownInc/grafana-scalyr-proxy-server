@@ -6,7 +6,7 @@
  * Time: 11:54
  */
 
-namespace Adknown\ProxyScalyr\Scalyr\ScalyrResponse;
+namespace Adknown\ProxyScalyr\Scalyr\Response;
 
 
 abstract class aResponse

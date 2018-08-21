@@ -6,7 +6,7 @@
  * Time: 13:24
  */
 
-namespace Adknown\ProxyScalyr\Scalyr\ScalyrResponse;
+namespace Adknown\ProxyScalyr\Scalyr\Response;
 
 
 class FacetResponse extends aResponse

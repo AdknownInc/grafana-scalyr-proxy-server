@@ -10,8 +10,8 @@ namespace Adknown\ProxyScalyr\Scalyr;
 
 
 use Adknown\ProxyScalyr\Scalyr\Request\Numeric;
-use Adknown\ProxyScalyr\Scalyr\ScalyrResponse\FacetResponse;
-use Adknown\ProxyScalyr\Scalyr\ScalyrResponse\NumericResponse;
+use Adknown\ProxyScalyr\Scalyr\Response\FacetResponse;
+use Adknown\ProxyScalyr\Scalyr\Response\NumericResponse;
 use \Exception;
 use GuzzleHttp\Client;
 
