@@ -6,7 +6,7 @@
  * Time: 11:56
  */
 
-namespace Adknown\ProxyScalyr\Scalyr\ScalyrResponse;
+namespace Adknown\ProxyScalyr\Scalyr\Response;
 
 
 class NumericResponse extends aResponse
