@@ -11,8 +11,8 @@ namespace Adknown\ProxyScalyr\Controllers;
 use Adknown\ProxyScalyr\Grafana\Response\Query\TimeSeriesTarget;
 use Adknown\ProxyScalyr\Scalyr\ComplexExpressions\Parser;
 use Adknown\ProxyScalyr\Scalyr\Request\Numeric;
-use Adknown\ProxyScalyr\Scalyr\ScalyrResponse\FacetResponse;
-use Adknown\ProxyScalyr\Scalyr\ScalyrResponse\NumericResponse;
+use Adknown\ProxyScalyr\Scalyr\Response\FacetResponse;
+use Adknown\ProxyScalyr\Scalyr\Response\NumericResponse;
 use Adknown\ProxyScalyr\Scalyr\SDK;
 use Exception;
 

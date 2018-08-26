@@ -2,8 +2,8 @@ version: '3.1'
 
 services:
   web:
-    container_name: nginx
-    build: nginx/
+    container_name: nginx_grafana_scalyr
+    image: nginx:alpine
     volumes:
       - "./nginx/nginx.conf:/etc/nginx/nginx.conf"
       - "./nginx/vhosts:/etc/nginx/conf.d/vhosts"
@@ -15,28 +15,36 @@ services:
     depends_on:
       - php
   php:
-    container_name: php
+    container_name: php_grafana_scalyr
     build: php-fpm-debug/
     volumes:
       - "../source:/var/www/html"
       - log-app:/var/log/myapp
+      - vendor-code:/var/www/html/vendor
     environment:
-      - SCALYR_READ_KEY=yourkeyhere
+      - SCALYR_READ_KEY=${SCALYR_READ_KEY}
+  composer:
+    container_name: composer_grafana_scalyr
+    image: composer/composer:php7
+    command: install
+    volumes:
+    - vendor-code:/app/vendor
+    - "../source:/app"
   grafana:
-    container_name: grafana
+    container_name: grafana_grafana_scalyr
     build: grafana/
     ports:
       - "3000:3000"
     volumes:
       - "./grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini"
-      - "../../grafana-scalyr-datasource-plugin:/var/lib/grafana/plugins/grafana-scalyr-datasource-plugin"
+      - ${RELATIVE_SCALYR_DATASOURCE_PLUGIN_DIR}:/var/lib/grafana/plugins/grafana-scalyr-datasource-plugin
   scalyr:
-    container_name: scalyr
+    container_name: scalyr_grafana_scalyr
     image: scalyr/scalyr-docker-agent
     volumes:
     - ./scalyr/agent.d:/etc/scalyr-agent-2/agent.d
     - /run/docker.sock:/var/scalyr/docker.sock
-    - log-app:/var/log/myapp/logs
+    - log-app:/var/log/myapp
     - log-infra-nginx:/var/log/nginx
     environment:
     - DOCKER_HOST_NAME=grafanaProxy
@@ -45,5 +53,6 @@ services:
 volumes:
   log-app: ~
   log-infra-nginx: ~
+  vendor-code: ~
 
 

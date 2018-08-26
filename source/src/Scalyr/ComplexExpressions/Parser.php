@@ -10,7 +10,7 @@ namespace Adknown\ProxyScalyr\Scalyr\ComplexExpressions;
 
 use Adknown\ProxyScalyr\Logging\LoggerImpl;
 use Adknown\ProxyScalyr\Scalyr\Request\Numeric;
-use Adknown\ProxyScalyr\Scalyr\ScalyrResponse\NumericResponse;
+use Adknown\ProxyScalyr\Scalyr\Response\NumericResponse;
 
 class Parser
 {

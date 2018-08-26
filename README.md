@@ -23,7 +23,6 @@ Modify the **docker-compose.yml** to:
 Modify the file `scalyr/agent.d/api_key.json` to also have your Scalyr api key in that file.
  
 ## Install
-cd into the source/ directory, run  `composer install`
 Run `docker-compose up` while in the **docker-container** directory
 
 In your browser, navigate to http://localhost:8000 and login to grafana
@@ -61,7 +60,6 @@ And that's it, you have configured the scalyr data source.
 # TODO:
 * Add a Contribution guide
 * Add further documentation about numeric vs facet vs complex
-* Add in a composer image to the docker-compose file so that composer is not required to get the proxy server running
 * Modify complex queries from using regex to using a grammar + parser so that all queries supported by Scalyr can be entered into grafana
 * Add authentication
   
