@@ -37,10 +37,76 @@ class Middleware
 	}
 
 	/**
+	 * @param \DateTime $dt Datetime to floor to nearest minute
+	 */
+	private function DtFloorToMinute(\DateTime $dt)
+	{
+		$dt->setTime(
+			(int)$dt->format('H'),
+			(int)$dt->format('i'),
+			0
+		);
+	}
+
+	/**
+	 * @param \DateTime $dt Datetime to floor to nearest hour
+	 */
+	private function DtFloorToHour(\DateTime $dt)
+	{
+		$dt->setTime((int)$dt->format('H'), 0, 0);
+	}
+
+	/**
+	 * @param \DateTime $dt Datetime to floor to nearest day
+	 */
+	private function DtFloorToDay(\DateTime $dt)
+	{
+		$dt->setTime(0, 0, 0);
+	}
+
+	/**
+	 * @param Target $queryData  - The Grafana target request
+	 * @param int    $roundedEnd - The "end" timestamp, rounded
+	 * @param int    $end        - The unrounded "end" timestamp
+	 *
+	 * @return float - The Scalyr datapoint value representing the interval [roundendEnd, end]
+	 * @throws Exception - Numeric bucket limit reached
+	 */
+	private function GetScalyrNumericRemainder($queryData, $roundedEnd, $end)
+	{
+		return $this->GetScalyrNumericResponse($queryData, $roundedEnd, $end, 1)->values[0];
+	}
+
+	/**
+	 * @param Target $queryData   - The Grafana target request
+	 * @param int    $start       - Start time timestamp
+	 * @param int    $end         - End time timestamp
+	 * @param int    $buckets     - The number of buckets (datapoints) Scalyr should return, distributed evenly
+	 *                            between $start and $end
+	 *
+	 * @return NumericResponse - A Scalyr numeric response contain X datapoints, where X == $buckets
+	 * @throws Exception - Numeric bucket limit reached
+	 */
+	private function GetScalyrNumericResponse($queryData, $start, $end, $buckets)
+	{
+		return $this->api->NumericQuery(
+			new Numeric(
+				$queryData->filter,
+				$queryData->graphFunction,
+				!empty($queryData->expression) ? $queryData->expression : '',
+				$start,
+				$end,
+				$buckets
+			)
+		);
+	}
+
+	/**
 	 * @param \Adknown\ProxyScalyr\Grafana\Request\TimeSeries $request
 	 *
 	 * @return \Adknown\ProxyScalyr\Grafana\Response\Query\TimeSeries
 	 * @throws \GuzzleHttp\Exception\GuzzleException
+	 * @throws Exception - Numeric bucket limit reached
 	 */
 	public function GrafanaToScalyrQuery(\Adknown\ProxyScalyr\Grafana\Request\TimeSeries $request)
 	{
@@ -71,42 +137,18 @@ class Middleware
 						switch($queryData->chosenType)
 						{
 							case Target::FIXED_INTERVAL_MINUTE:
-								$startDT->setTime(
-									(int)$startDT->format('H'),
-									(int)$startDT->format('i'),
-									0
-								);
-								$endDT->setTime(
-									(int)$endDT->format('H'),
-									(int)$endDT->format('i'),
-									0
-								);
+								$this->DtFloorToMinute($startDT);
+								$this->DtFloorToMinute($endDT);
 								$queryData->secondsInterval = 60;
 								break;
 							case Target::FIXED_INTERVAL_HOUR:
-								$startDT->setTime(
-									(int)$startDT->format('H'),
-									0,
-									0
-								);
-								$endDT->setTime(
-									(int)$endDT->format('H'),
-									0,
-									0
-								);
+								$this->DtFloorToHour($startDT);
+								$this->DtFloorToHour($endDT);
 								$queryData->secondsInterval = 3600;
 								break;
 							case Target::FIXED_INTERVAL_DAY:
-								$startDT->setTime(
-									0,
-									0,
-									0
-								);
-								$endDT->setTime(
-									0,
-									0,
-									0
-								);
+								$this->DtFloorToDay($startDT);
+								$this->DtFloorToDay($endDT);
 								$queryData->secondsInterval = 86400;
 								break;
 							case Target::FIXED_INTERVAL_WEEK:
@@ -116,16 +158,11 @@ class Middleware
 						}
 
 						$remainderEnd = $end;
-						$remainderValue = $this->api->NumericQuery(
-							new Numeric(
-								$queryData->filter,
-								$queryData->graphFunction,
-								!empty($queryData->expression) ? $queryData->expression : '',
-								$endDT->getTimestamp(),
-								$remainderEnd,
-								1
-							)
-						)->values[0];
+						$remainderValue = $this->GetScalyrNumericRemainder(
+							$queryData,
+							$endDT->getTimestamp(),
+							$remainderEnd
+						);
 
 						$start = $startDT->getTimestamp();
 						$end = $endDT->getTimestamp();
@@ -133,23 +170,13 @@ class Middleware
 
 					$start -= $queryData->secondsInterval;
 					$buckets = $this->CalculateBuckets($start, $end, $queryData->secondsInterval);
-
-					$response = $this->api->NumericQuery(
-						new Numeric(
-							$queryData->filter,
-							$queryData->graphFunction,
-							!empty($queryData->expression) ? $queryData->expression : '',
-							$start,
-							$end,
-							$buckets
-						)
-					);
+					$response = $this->GetScalyrNumericResponse($queryData, $start, $end, $buckets);
 
 					$grafanaTarget = $this->ConvertScalyrNumericToGrafana($response, $queryData->target, $start, $queryData->secondsInterval);
 
 					if(isset($remainderValue) && isset($remainderEnd))
 					{
-						$grafanaTarget->datapoints[] = [(double)$remainderValue, $remainderEnd * 1000];
+						$grafanaTarget->Append($remainderValue, $remainderEnd);
 						unset($remainderValue);
 						unset($remainderEnd);
 					}
