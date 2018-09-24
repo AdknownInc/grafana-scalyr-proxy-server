@@ -119,7 +119,7 @@ class Middleware
 						$startRemainder = $endDT->getTimestamp();
 						$endRemainder = $end;
 						$bucketsRemainder = 1;
-						$remainderResponse = $this->api->NumericQuery(
+						$responseRemainder = $this->api->NumericQuery(
 							new Numeric(
 								$queryData->filter,
 								$queryData->graphFunction,
@@ -135,6 +135,8 @@ class Middleware
 						$buckets = $this->CalculateBuckets($start, $end, $queryData->secondsInterval);
 					}
 
+					$start -= $queryData->secondsInterval;
+					$buckets += 1;
 
 					$response = $this->api->NumericQuery(
 						new Numeric(
@@ -147,13 +149,15 @@ class Middleware
 						)
 					);
 
-					if(isset($remainderResponse))
+					$grafanaTarget = $this->ConvertScalyrNumericToGrafana($response, $queryData->target, $start, $queryData->secondsInterval);
+
+					if(isset($responseRemainder))
 					{
-						$response->values = array_merge($response->values, $remainderResponse->values);
-						unset($remainderResponse);
+						$grafanaTarget->datapoints[] = [(double)$responseRemainder->values[0], $endRemainder * 1000];
+						unset($responseRemainder);
 					}
 
-					$grafResponse->AddTarget($this->ConvertScalyrNumericToGrafana($response, $queryData->target, $start, $queryData->secondsInterval));
+					$grafResponse->AddTarget($grafanaTarget);
 					break;
 
 				case 'complex numeric query':
@@ -216,7 +220,7 @@ class Middleware
 
 		foreach($response->values as $value)
 		{
-			$datapoints[] = [(double)$value, $startTime];
+			$datapoints[] = [(double)$value, $startTime + $incrementValue];
 			$startTime += $incrementValue;
 		}
 
