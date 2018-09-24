@@ -13,41 +13,6 @@ class Utilities
 {
 	const DUMP_DIRECTORY = __DIR__ . '/../dump';
 
-	public static function WriteToFile($filename, $contents, $jsonEncode = false)
-	{
-
-		$now = new \DateTime('now', new \DateTimeZone('utc'));
-		$breakStr = "\n*******\n" . $now->format('Y-m-d-H-i-s') . "\n*******\n";
-
-		$filename .= ".txt";
-		$filename = str_replace(" ", "_", $filename);
-
-		if(is_array($contents))
-		{
-			if($jsonEncode === true)
-			{
-				$contents = json_encode($contents);
-			}
-			else
-			{
-				$realContents = "";
-				foreach($contents as $key => $value)
-				{
-					$realContents .= "$key: " . print_r($value, true) . "\n";
-				}
-				$contents = $realContents;
-			}
-		}
-		else
-		{
-			if(is_string($contents) !== true)
-			{
-				$contents = print_r($contents, true);
-			}
-		}
-		file_put_contents(self::DUMP_DIRECTORY . "/$filename", $breakStr . $contents, FILE_APPEND);
-	}
-
 	// Gets the user's user agent string if it exists as a server variable
 	public static function GetUserAgent()
 	{

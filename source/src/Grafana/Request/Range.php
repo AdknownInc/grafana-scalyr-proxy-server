@@ -13,4 +13,26 @@ class Range
 {
 	public $from;
 	public $to;
+
+	/**
+	 * Returns the unix timestamp equivalent of the set $from string
+	 *
+	 * @return false|int
+	 */
+	public function GetFromAsTimestamp()
+	{
+		return strtotime($this->from);
+	}
+
+	/**
+	 * Returns the unix timestamp equivalent of the set $to string
+	 *
+	 * @return false|int
+	 */
+	public function GetToAsTimestamp()
+	{
+		return strtotime($this->to);
+	}
+
+
 }

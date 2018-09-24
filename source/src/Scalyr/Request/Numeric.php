@@ -142,7 +142,7 @@ class Numeric extends aBase
 		$upper = 5000;
 		if($buckets < $lower || $buckets > $upper)
 		{
-			throw new Exception("Buckets must be between $lower and $upper");
+			throw new Exception("Buckets must be between $lower and $upper. Attempted to set to $buckets.");
 		}
 		$this->buckets = $buckets;
 	}
