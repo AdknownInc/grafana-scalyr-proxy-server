@@ -104,7 +104,7 @@ class Middleware
 	 * @param \Adknown\ProxyScalyr\Grafana\Request\TimeSeries $request
 	 * @param \Adknown\ProxyScalyr\Grafana\Request\Target $queryData
 	 *
-	 * @return TimeSeriesTarget - The target to sent via the Grafana response
+	 * @return TimeSeriesTarget - The target to send in the Grafana response
 	 * @throws Exception - Numeric bucket limit reached
 	 */
 	private function GetNumericQueryTarget($request, $queryData)
@@ -170,7 +170,7 @@ class Middleware
 	 * @param \Adknown\ProxyScalyr\Grafana\Request\TimeSeries $request
 	 * @param \Adknown\ProxyScalyr\Grafana\Request\Target $queryData
 	 *
-	 * @return TimeSeriesTarget - The target to sent via the Grafana response
+	 * @return TimeSeriesTarget - The target to send in the Grafana response
 	 * @throws Exception - Numeric bucket limit reached
 	 */
 	private function GetComplexQueryTarget($request, $queryData)
