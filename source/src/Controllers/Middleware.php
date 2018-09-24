@@ -46,6 +46,9 @@ class Middleware
 	{
 		$grafResponse = new \Adknown\ProxyScalyr\Grafana\Response\Query\TimeSeries();
 
+		$start = $request->range->GetFromAsTimestamp();
+		$end = $request->range->GetToAsTimestamp();
+
 		foreach($request->targets as $targetIndex => $queryData)
 		{
 			if(!isset(self::QUERY_TYPES[$queryData->type]))
@@ -57,14 +60,10 @@ class Middleware
 			{
 				throw new Exception(sprintf("Empty target found for query #%d. All queries must have a target.", $targetIndex + 1));
 			}
-			$start = $request->range->GetFromAsTimestamp();
-			$end = $request->range->GetToAsTimestamp();
-			$buckets = $this->CalculateBuckets($start, $end, $queryData->secondsInterval);
 
 			switch($queryData->type)
 			{
 				case 'numeric query':
-					//split the query into complete intervals
 					if($queryData->intervalType === Target::INTERVAL_TYPE_FIXED)
 					{
 						$startDT = new \DateTime($request->range->from, new \DateTimeZone('utc'));
@@ -116,27 +115,24 @@ class Middleware
 								throw new Exception("Selection '{$queryData->chosenType}' Not yet implemented");
 						}
 
-						$startRemainder = $endDT->getTimestamp();
-						$endRemainder = $end;
-						$bucketsRemainder = 1;
-						$responseRemainder = $this->api->NumericQuery(
+						$remainderEnd = $end;
+						$remainderValue = $this->api->NumericQuery(
 							new Numeric(
 								$queryData->filter,
 								$queryData->graphFunction,
 								!empty($queryData->expression) ? $queryData->expression : '',
-								$startRemainder,
-								$endRemainder,
-								$bucketsRemainder
+								$endDT->getTimestamp(),
+								$remainderEnd,
+								1
 							)
-						);
+						)->values[0];
 
 						$start = $startDT->getTimestamp();
 						$end = $endDT->getTimestamp();
-						$buckets = $this->CalculateBuckets($start, $end, $queryData->secondsInterval);
 					}
 
 					$start -= $queryData->secondsInterval;
-					$buckets += 1;
+					$buckets = $this->CalculateBuckets($start, $end, $queryData->secondsInterval);
 
 					$response = $this->api->NumericQuery(
 						new Numeric(
@@ -151,10 +147,11 @@ class Middleware
 
 					$grafanaTarget = $this->ConvertScalyrNumericToGrafana($response, $queryData->target, $start, $queryData->secondsInterval);
 
-					if(isset($responseRemainder))
+					if(isset($remainderValue) && isset($remainderEnd))
 					{
-						$grafanaTarget->datapoints[] = [(double)$responseRemainder->values[0], $endRemainder * 1000];
-						unset($responseRemainder);
+						$grafanaTarget->datapoints[] = [(double)$remainderValue, $remainderEnd * 1000];
+						unset($remainderValue);
+						unset($remainderEnd);
 					}
 
 					$grafResponse->AddTarget($grafanaTarget);
@@ -217,11 +214,12 @@ class Middleware
 		$datapoints = [];
 		$startTime *= 1000;
 		$incrementValue *= 1000;
+		$endTime = $startTime + $incrementValue;
 
 		foreach($response->values as $value)
 		{
-			$datapoints[] = [(double)$value, $startTime + $incrementValue];
-			$startTime += $incrementValue;
+			$datapoints[] = [(double)$value, $endTime];
+			$endTime += $incrementValue;
 		}
 
 		return new TimeSeriesTarget($target, $datapoints);
