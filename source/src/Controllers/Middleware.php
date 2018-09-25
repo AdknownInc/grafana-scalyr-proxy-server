@@ -209,7 +209,7 @@ class Middleware
 		{
 			if(!isset(self::QUERY_TYPES[$queryData->type]))
 			{
-				throw new \Exception("'type' must defined as one of: " . implode("','", self::QUERY_TYPES));
+				throw new \Exception("'type' must defined as one of: " . implode("','", array_keys(self::QUERY_TYPES)));
 			}
 
 			if(empty($queryData->target))
