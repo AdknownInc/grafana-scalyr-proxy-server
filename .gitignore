@@ -1,4 +1,5 @@
 .idea/
 source/vendor/
+package/
 docker-container/scalyr/agent.d/api_key.json
 docker-container/.env

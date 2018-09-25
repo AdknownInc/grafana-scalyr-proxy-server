@@ -11,6 +11,15 @@ namespace Adknown\ProxyScalyr\Grafana\Request;
 
 class Target
 {
+	const INTERVAL_TYPE_FIXED = 'fixed';
+	const INTERVAL_TYPE_WINDOW = 'window';
+
+	const FIXED_INTERVAL_MINUTE = 'minute';
+	const FIXED_INTERVAL_HOUR = 'hour';
+	const FIXED_INTERVAL_DAY = 'day';
+	const FIXED_INTERVAL_WEEK = 'week';
+	const FIXED_INTERVAL_MONTH = 'month';
+
 	//all fields are assumed to be strings unless otherwise annotated
 	public $filter;
 	public $graphFunction;
@@ -28,8 +37,17 @@ class Target
 	 * @var int
 	 */
 	public $secondsInterval;
+	/**
+	 * @var string The type of interval used in this time series.
+	 * Possible Values: 'fixed', 'window'
+	 */
+	public $intervalType;
+
+	/**
+	 * @var string The chosen interval type, only relevant when the user has selected 'fixed' for interval type
+	 */
+	public $chosenType;
 	public $target;
 	public $type;
 	public $expression;
-
 }

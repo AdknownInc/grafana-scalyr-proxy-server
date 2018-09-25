@@ -21,6 +21,16 @@ class TimeSeriesTarget
 	 */
 	public $datapoints;
 
+	/**
+	 * Multiplies $time by 1000 to convert it into milliseconds
+	 *
+	 * @param float $value - The value of the datapoint
+	 * @param int $time - The timestamp of the datapoint, in seconds
+	 */
+	public function Append($value, $time) {
+		$this->datapoints[] = [$value, $time * 1000];
+	}
+
 	public function __construct(?string $target, array $datapoints)
 	{
 		$this->target = $target;

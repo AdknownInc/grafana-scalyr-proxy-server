@@ -8,13 +8,13 @@
 
 namespace Adknown\ProxyScalyr\Controllers;
 
+use Adknown\ProxyScalyr\Grafana\Request\Target;
 use Adknown\ProxyScalyr\Grafana\Response\Query\TimeSeriesTarget;
 use Adknown\ProxyScalyr\Scalyr\ComplexExpressions\Parser;
 use Adknown\ProxyScalyr\Scalyr\Request\Numeric;
 use Adknown\ProxyScalyr\Scalyr\Response\FacetResponse;
 use Adknown\ProxyScalyr\Scalyr\Response\NumericResponse;
 use Adknown\ProxyScalyr\Scalyr\SDK;
-use Exception;
 
 class Middleware
 {
@@ -35,9 +35,170 @@ class Middleware
 	}
 
 	/**
+	 * @param \DateTime $dt Datetime to floor to nearest minute
+	 */
+	private function DtFloorToMinute(\DateTime $dt)
+	{
+		$dt->setTime(
+			(int)$dt->format('H'),
+			(int)$dt->format('i'),
+			0
+		);
+	}
+
+	/**
+	 * @param \DateTime $dt Datetime to floor to nearest hour
+	 */
+	private function DtFloorToHour(\DateTime $dt)
+	{
+		$dt->setTime((int)$dt->format('H'), 0, 0);
+	}
+
+	/**
+	 * @param \DateTime $dt Datetime to floor to nearest day
+	 */
+	private function DtFloorToDay(\DateTime $dt)
+	{
+		$dt->setTime(0, 0, 0);
+	}
+
+	/**
+	 * @param \Adknown\ProxyScalyr\Grafana\Request\Target
+	 * @param int $roundedEnd - The "end" timestamp, rounded
+	 * @param int $end        - The unrounded "end" timestamp
+	 *
+	 * @return float - The Scalyr datapoint value representing the interval [roundendEnd, end]
+	 * @throws \GuzzleHttp\Exception\GuzzleException
+	 * @throws \Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException
+	 */
+	private function GetScalyrNumericRemainder($queryData, $roundedEnd, $end)
+	{
+		return $this->GetScalyrNumericResponse($queryData, $roundedEnd, $end, 1)->values[0];
+	}
+
+	/**
+	 * @param \Adknown\ProxyScalyr\Grafana\Request\Target
+	 * @param int $start          - Start time timestamp
+	 * @param int $end            - End time timestamp
+	 * @param int $buckets        - The number of buckets (datapoints) Scalyr should return, distributed evenly
+	 *                            between $start and $end
+	 *
+	 * @return NumericResponse - A Scalyr numeric response contain X datapoints, where X == $buckets
+	 * @throws \GuzzleHttp\Exception\GuzzleException
+	 * @throws \Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException
+	 */
+	private function GetScalyrNumericResponse($queryData, $start, $end, $buckets)
+	{
+		return $this->api->NumericQuery(
+			new Numeric(
+				$queryData->filter,
+				$queryData->graphFunction,
+				!empty($queryData->expression) ? $queryData->expression : '',
+				$start,
+				$end,
+				$buckets
+			)
+		);
+	}
+
+	/**
+	 * @param \Adknown\ProxyScalyr\Grafana\Request\TimeSeries $request
+	 * @param \Adknown\ProxyScalyr\Grafana\Request\Target     $queryData
+	 *
+	 * @return TimeSeriesTarget - The target to send in the Grafana response
+	 * @throws \Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException
+	 * @throws \GuzzleHttp\Exception\GuzzleException
+	 */
+	private function GetNumericQueryTarget($request, $queryData)
+	{
+		$start = $request->range->GetFromAsTimestamp();
+		$end = $request->range->GetToAsTimestamp();
+
+		if($queryData->intervalType === Target::INTERVAL_TYPE_FIXED)
+		{
+			$startDT = new \DateTime($request->range->from, new \DateTimeZone('utc'));
+			$endDT = new \DateTime($request->range->to, new \DateTimeZone('utc'));
+			switch($queryData->chosenType)
+			{
+				case Target::FIXED_INTERVAL_MINUTE:
+					$this->DtFloorToMinute($startDT);
+					$this->DtFloorToMinute($endDT);
+					$queryData->secondsInterval = 60;
+					break;
+				case Target::FIXED_INTERVAL_HOUR:
+					$this->DtFloorToHour($startDT);
+					$this->DtFloorToHour($endDT);
+					$queryData->secondsInterval = 3600;
+					break;
+				case Target::FIXED_INTERVAL_DAY:
+					$this->DtFloorToDay($startDT);
+					$this->DtFloorToDay($endDT);
+					$queryData->secondsInterval = 86400;
+					break;
+				case Target::FIXED_INTERVAL_WEEK:
+				case Target::FIXED_INTERVAL_MONTH:
+				default:
+					throw new \Exception("Selection '{$queryData->chosenType}' Not yet implemented");
+			}
+
+			$remainderEnd = $end;
+			$remainderValue = $this->GetScalyrNumericRemainder(
+				$queryData,
+				$endDT->getTimestamp(),
+				$remainderEnd
+			);
+
+			$start = $startDT->getTimestamp();
+			$end = $endDT->getTimestamp();
+		}
+
+		$start -= $queryData->secondsInterval;
+		$buckets = $this->CalculateBuckets($start, $end, $queryData->secondsInterval);
+		$response = $this->GetScalyrNumericResponse($queryData, $start, $end, $buckets);
+
+		$grafanaTarget = $this->ConvertScalyrNumericToGrafana($response, $queryData->target, $start, $queryData->secondsInterval);
+
+		if(isset($remainderValue) && isset($remainderEnd))
+		{
+			$grafanaTarget->Append($remainderValue, $remainderEnd);
+		}
+
+		return $grafanaTarget;
+	}
+
+	/**
+	 * @param \Adknown\ProxyScalyr\Grafana\Request\TimeSeries $request
+	 * @param \Adknown\ProxyScalyr\Grafana\Request\Target     $queryData
+	 *
+	 * @return TimeSeriesTarget - The target to send in the Grafana response
+	 * @throws \Exception - Numeric bucket limit reached
+	 * @throws \GuzzleHttp\Exception\GuzzleException
+	 */
+	private function GetComplexQueryTarget($request, $queryData)
+	{
+		$start = $request->range->GetFromAsTimestamp();
+		$end = $request->range->GetToAsTimestamp();
+		$buckets = $this->CalculateBuckets($start, $end, $queryData->secondsInterval);
+
+		$simpleExpressions = Parser::ParseComplexExpression($queryData->filter, $start, $end, $buckets, $fullVariableExpression);
+		foreach($simpleExpressions as $key => $scalyrParams)
+		{
+			if($scalyrParams instanceof Numeric)
+			{
+				$response = $this->api->NumericQuery($scalyrParams);
+				$simpleExpressions[$key] = $response;
+			}
+		}
+		$fullResponse = Parser::NewEvaluateExpression($fullVariableExpression, $simpleExpressions);
+
+		return $this->ConvertScalyrNumericToGrafana($fullResponse, $queryData->target, $start, $queryData->secondsInterval);
+	}
+
+	/**
 	 * @param \Adknown\ProxyScalyr\Grafana\Request\TimeSeries $request
 	 *
 	 * @return \Adknown\ProxyScalyr\Grafana\Response\Query\TimeSeries
+	 * @throws \Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException
 	 * @throws \GuzzleHttp\Exception\GuzzleException
 	 */
 	public function GrafanaToScalyrQuery(\Adknown\ProxyScalyr\Grafana\Request\TimeSeries $request)
@@ -48,54 +209,26 @@ class Middleware
 		{
 			if(!isset(self::QUERY_TYPES[$queryData->type]))
 			{
-				throw new Exception("'type' must defined as one of: " . implode("','", self::QUERY_TYPES));
+				throw new \Exception("'type' must defined as one of: " . implode("','", self::QUERY_TYPES));
 			}
 
-			if (empty($queryData->target))
+			if(empty($queryData->target))
 			{
-				throw new Exception(sprintf("Empty target found for query #%d. All queries must have a target.", $targetIndex + 1));
+				throw new \Exception(sprintf("Empty target found for query #%d. All queries must have a target.", $targetIndex + 1));
 			}
-
-			$start = strtotime($request->range->from);
-			$end = strtotime($request->range->to);
-			$buckets = $this->CalculateBuckets($start, $end, $queryData->secondsInterval);
 
 			switch($queryData->type)
 			{
 				case 'numeric query':
-					$response = $this->api->NumericQuery(
-						new Numeric(
-							$queryData->filter,
-							$queryData->graphFunction,
-							!empty($queryData->expression) ? $queryData->expression : '',
-							$start,
-							$end,
-							$buckets
-						)
-					);
-
-					$grafResponse->AddTarget($this->ConvertScalyrNumericToGrafana($response, $queryData->target, $start, $queryData->secondsInterval));
+					$grafResponse->AddTarget($this->GetNumericQueryTarget($request, $queryData));
 					break;
-
 				case 'complex numeric query':
-
-					$simpleExpressions = Parser::ParseComplexExpression($queryData->filter, $start, $end, $buckets, $fullVariableExpression);
-					foreach($simpleExpressions as $key => $scalyrParams)
-					{
-						if ($scalyrParams instanceof Numeric)
-						{
-							$response = $this->api->NumericQuery($scalyrParams);
-							$simpleExpressions[$key] = $response;
-						}
-
-					}
-					$fullResponse = Parser::NewEvaluateExpression($fullVariableExpression, $simpleExpressions);
-					$grafResponse->AddTarget($this->ConvertScalyrNumericToGrafana($fullResponse, $queryData->target, $start, $queryData->secondsInterval));
+					$grafResponse->AddTarget($this->GetComplexQueryTarget($request, $queryData));
 					break;
 				case 'facet query':
-					throw new Exception("facet queries not yet implemented");
+					throw new \Exception("facet queries not yet implemented");
 				default:
-					throw new Exception("Unsupported query type: " . $queryData->type);
+					throw new \Exception("Unsupported query type: " . $queryData->type);
 			}
 		}
 
@@ -135,11 +268,12 @@ class Middleware
 		$datapoints = [];
 		$startTime *= 1000;
 		$incrementValue *= 1000;
+		$endTime = $startTime + $incrementValue;
 
 		foreach($response->values as $value)
 		{
-			$datapoints[] = [(double)$value, $startTime];
-			$startTime += $incrementValue;
+			$datapoints[] = [(double)$value, $endTime];
+			$endTime += $incrementValue;
 		}
 
 		return new TimeSeriesTarget($target, $datapoints);

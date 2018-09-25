@@ -1,6 +1,9 @@
 <?php
 /**
  * Created by PhpStorm.
+ *
+ * Used by the JSON decoder library: karriere/json-decoder
+ *
  * User: matt
  * Date: 06/07/18
  * Time: 5:49 PM
