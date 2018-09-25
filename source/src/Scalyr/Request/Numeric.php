@@ -8,8 +8,7 @@
 
 namespace Adknown\ProxyScalyr\Scalyr\Request;
 
-
-use Exception;
+use Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException;
 
 class Numeric extends aBase
 {
@@ -27,6 +26,9 @@ class Numeric extends aBase
 	const FUNCTION_P999 = 'p999';
 	const FUNCTION_COUNT = 'count';
 	const FUNCTION_RATE = 'rate';
+
+	const BUCKETS_MIN = 1;
+	const BUCKETS_MAX = 5000;
 
 	/**
 	 * @var string
@@ -77,7 +79,7 @@ class Numeric extends aBase
 	 * @param int    $buckets   Number of numeric values to return. The time range is divided into this many equal slices. For instance, suppose you query a four-hour period, with buckets = 4. The query will return four numbers, each covering a one-hour period.
 	 * @param string $priority
 	 *
-	 * @throws Exception
+	 * @throws BadBucketsException
 	 */
 	public function __construct($filter, string $function, string $subjectField, string $startTime, string $endTime = "", int $buckets = 1, string $priority = self::PRIORITY_LOW)
 	{
@@ -95,7 +97,7 @@ class Numeric extends aBase
 	 * @param string $function
 	 * @param string $subjectField
 	 *
-	 * @throws Exception
+	 * @throws \Exception
 	 */
 	public function setFunction($function, $subjectField)
 	{
@@ -132,17 +134,15 @@ class Numeric extends aBase
 				$this->function = self::FUNCTION_RATE;
 				break;
 			default:
-				throw new Exception("Unsupported function: $function");
+				throw new \Exception("Unsupported function: $function");
 		}
 	}
 
 	public function setBuckets(int $buckets)
 	{
-		$lower = 1;
-		$upper = 5000;
-		if($buckets < $lower || $buckets > $upper)
+		if($buckets < self::BUCKETS_MIN || $buckets > self::BUCKETS_MAX)
 		{
-			throw new Exception("Buckets must be between $lower and $upper. Attempted to set to $buckets.");
+			throw new BadBucketsException($buckets);
 		}
 		$this->buckets = $buckets;
 	}

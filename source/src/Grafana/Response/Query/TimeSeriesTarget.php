@@ -22,6 +22,8 @@ class TimeSeriesTarget
 	public $datapoints;
 
 	/**
+	 * Multiplies $time by 1000 to convert it into milliseconds
+	 *
 	 * @param float $value - The value of the datapoint
 	 * @param int $time - The timestamp of the datapoint, in seconds
 	 */

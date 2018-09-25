@@ -34,7 +34,7 @@ class Parser
 	 * @param string $fullVariableExpression
 	 *
 	 * @return array
-	 * @throws \Exception
+	 * @throws \Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException
 	 */
 	public static function ParseComplexExpression($expression, $start, $end, $buckets, &$fullVariableExpression)
 	{

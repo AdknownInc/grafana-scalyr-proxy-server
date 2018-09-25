@@ -69,6 +69,7 @@ class Middleware
 	 *
 	 * @return float - The Scalyr datapoint value representing the interval [roundendEnd, end]
 	 * @throws \GuzzleHttp\Exception\GuzzleException
+	 * @throws \Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException
 	 */
 	private function GetScalyrNumericRemainder($queryData, $roundedEnd, $end)
 	{
@@ -84,6 +85,7 @@ class Middleware
 	 *
 	 * @return NumericResponse - A Scalyr numeric response contain X datapoints, where X == $buckets
 	 * @throws \GuzzleHttp\Exception\GuzzleException
+	 * @throws \Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException
 	 */
 	private function GetScalyrNumericResponse($queryData, $start, $end, $buckets)
 	{
@@ -104,7 +106,7 @@ class Middleware
 	 * @param \Adknown\ProxyScalyr\Grafana\Request\Target     $queryData
 	 *
 	 * @return TimeSeriesTarget - The target to send in the Grafana response
-	 * @throws \Exception - Numeric bucket limit reached
+	 * @throws \Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException
 	 * @throws \GuzzleHttp\Exception\GuzzleException
 	 */
 	private function GetNumericQueryTarget($request, $queryData)
@@ -196,7 +198,7 @@ class Middleware
 	 * @param \Adknown\ProxyScalyr\Grafana\Request\TimeSeries $request
 	 *
 	 * @return \Adknown\ProxyScalyr\Grafana\Response\Query\TimeSeries
-	 * @throws \Exception - Numeric bucket limit reached
+	 * @throws \Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException
 	 * @throws \GuzzleHttp\Exception\GuzzleException
 	 */
 	public function GrafanaToScalyrQuery(\Adknown\ProxyScalyr\Grafana\Request\TimeSeries $request)

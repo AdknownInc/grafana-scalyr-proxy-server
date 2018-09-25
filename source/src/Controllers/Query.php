@@ -50,6 +50,12 @@ class Query extends Ajax
 			$message = !empty($resparray['message']) ? $resparray['message'] : "Unable to get the error message from scalyr";
 			$this->RespondError($message);
 		}
+		catch (\Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException $ex)
+		{
+			LoggerImpl::Exception($ex);
+			$message = "Selected time interval too small for selected time range. Logic to make multiple Scalyr requests to get the required data points not yet implementeed. " . $ex->getMessage();
+			$this->RespondError($message);
+		}
 	}
 
 	protected function Delete()
