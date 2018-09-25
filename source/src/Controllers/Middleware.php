@@ -15,7 +15,6 @@ use Adknown\ProxyScalyr\Scalyr\Request\Numeric;
 use Adknown\ProxyScalyr\Scalyr\Response\FacetResponse;
 use Adknown\ProxyScalyr\Scalyr\Response\NumericResponse;
 use Adknown\ProxyScalyr\Scalyr\SDK;
-use Exception;
 
 class Middleware
 {
@@ -65,11 +64,11 @@ class Middleware
 
 	/**
 	 * @param \Adknown\ProxyScalyr\Grafana\Request\Target
-	 * @param int    $roundedEnd - The "end" timestamp, rounded
-	 * @param int    $end        - The unrounded "end" timestamp
+	 * @param int $roundedEnd - The "end" timestamp, rounded
+	 * @param int $end        - The unrounded "end" timestamp
 	 *
 	 * @return float - The Scalyr datapoint value representing the interval [roundendEnd, end]
-	 * @throws Exception - Numeric bucket limit reached
+	 * @throws \GuzzleHttp\Exception\GuzzleException
 	 */
 	private function GetScalyrNumericRemainder($queryData, $roundedEnd, $end)
 	{
@@ -78,13 +77,13 @@ class Middleware
 
 	/**
 	 * @param \Adknown\ProxyScalyr\Grafana\Request\Target
-	 * @param int    $start       - Start time timestamp
-	 * @param int    $end         - End time timestamp
-	 * @param int    $buckets     - The number of buckets (datapoints) Scalyr should return, distributed evenly
+	 * @param int $start          - Start time timestamp
+	 * @param int $end            - End time timestamp
+	 * @param int $buckets        - The number of buckets (datapoints) Scalyr should return, distributed evenly
 	 *                            between $start and $end
 	 *
 	 * @return NumericResponse - A Scalyr numeric response contain X datapoints, where X == $buckets
-	 * @throws Exception - Numeric bucket limit reached
+	 * @throws \GuzzleHttp\Exception\GuzzleException
 	 */
 	private function GetScalyrNumericResponse($queryData, $start, $end, $buckets)
 	{
@@ -102,10 +101,11 @@ class Middleware
 
 	/**
 	 * @param \Adknown\ProxyScalyr\Grafana\Request\TimeSeries $request
-	 * @param \Adknown\ProxyScalyr\Grafana\Request\Target $queryData
+	 * @param \Adknown\ProxyScalyr\Grafana\Request\Target     $queryData
 	 *
 	 * @return TimeSeriesTarget - The target to send in the Grafana response
-	 * @throws Exception - Numeric bucket limit reached
+	 * @throws \Exception - Numeric bucket limit reached
+	 * @throws \GuzzleHttp\Exception\GuzzleException
 	 */
 	private function GetNumericQueryTarget($request, $queryData)
 	{
@@ -136,7 +136,7 @@ class Middleware
 				case Target::FIXED_INTERVAL_WEEK:
 				case Target::FIXED_INTERVAL_MONTH:
 				default:
-					throw new Exception("Selection '{$queryData->chosenType}' Not yet implemented");
+					throw new \Exception("Selection '{$queryData->chosenType}' Not yet implemented");
 			}
 
 			$remainderEnd = $end;
@@ -159,8 +159,6 @@ class Middleware
 		if(isset($remainderValue) && isset($remainderEnd))
 		{
 			$grafanaTarget->Append($remainderValue, $remainderEnd);
-			unset($remainderValue);
-			unset($remainderEnd);
 		}
 
 		return $grafanaTarget;
@@ -168,10 +166,11 @@ class Middleware
 
 	/**
 	 * @param \Adknown\ProxyScalyr\Grafana\Request\TimeSeries $request
-	 * @param \Adknown\ProxyScalyr\Grafana\Request\Target $queryData
+	 * @param \Adknown\ProxyScalyr\Grafana\Request\Target     $queryData
 	 *
 	 * @return TimeSeriesTarget - The target to send in the Grafana response
-	 * @throws Exception - Numeric bucket limit reached
+	 * @throws \Exception - Numeric bucket limit reached
+	 * @throws \GuzzleHttp\Exception\GuzzleException
 	 */
 	private function GetComplexQueryTarget($request, $queryData)
 	{
@@ -197,7 +196,8 @@ class Middleware
 	 * @param \Adknown\ProxyScalyr\Grafana\Request\TimeSeries $request
 	 *
 	 * @return \Adknown\ProxyScalyr\Grafana\Response\Query\TimeSeries
-	 * @throws Exception - Numeric bucket limit reached
+	 * @throws \Exception - Numeric bucket limit reached
+	 * @throws \GuzzleHttp\Exception\GuzzleException
 	 */
 	public function GrafanaToScalyrQuery(\Adknown\ProxyScalyr\Grafana\Request\TimeSeries $request)
 	{
@@ -207,12 +207,12 @@ class Middleware
 		{
 			if(!isset(self::QUERY_TYPES[$queryData->type]))
 			{
-				throw new Exception("'type' must defined as one of: " . implode("','", self::QUERY_TYPES));
+				throw new \Exception("'type' must defined as one of: " . implode("','", self::QUERY_TYPES));
 			}
 
 			if(empty($queryData->target))
 			{
-				throw new Exception(sprintf("Empty target found for query #%d. All queries must have a target.", $targetIndex + 1));
+				throw new \Exception(sprintf("Empty target found for query #%d. All queries must have a target.", $targetIndex + 1));
 			}
 
 			switch($queryData->type)
@@ -224,9 +224,9 @@ class Middleware
 					$grafResponse->AddTarget($this->GetComplexQueryTarget($request, $queryData));
 					break;
 				case 'facet query':
-					throw new Exception("facet queries not yet implemented");
+					throw new \Exception("facet queries not yet implemented");
 				default:
-					throw new Exception("Unsupported query type: " . $queryData->type);
+					throw new \Exception("Unsupported query type: " . $queryData->type);
 			}
 		}
 
