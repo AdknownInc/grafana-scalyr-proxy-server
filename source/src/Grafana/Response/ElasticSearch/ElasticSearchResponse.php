@@ -40,8 +40,8 @@ class ElasticSearchResponse
 		$esr->_shards = new Shards();
 		$esr->_shards->total = 5;
 		$esr->_shards->successful = 5;
-		$esr->_shards->skipped = 5;
-		$esr->_shards->failed = 5;
+		$esr->_shards->skipped = 0;
+		$esr->_shards->failed = 0;
 
 		$esr->hits = new Hits();
 		$esr->hits->total = 1;

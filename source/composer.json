@@ -1,11 +1,27 @@
 {
   "require": {
     "guzzlehttp/guzzle": "^6.3",
-    "karriere/json-decoder": "^2.1"
+    "karriere/json-decoder": "^2.1",
+    "phpunit/phpunit": "^6.5"
   },
   "autoload": {
     "psr-4": {
       "Adknown\\ProxyScalyr\\": "src/"
     }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Adknown\\ProxyScalyr\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "unittest":  [
+      "php tools/PHPVersionCheck/run.php",
+      "vendor/bin/phpunit -c ./phpunit-configs/unittests.xml"
+    ],
+    "win-unittest": [
+      "php .\\tools\\PHPVersionCheck\\run.php",
+      "php .\\vendor\\phpunit\\phpunit\\phpunit -c .\\phpunit-configs\\unittests.xml"
+    ]
   }
 }

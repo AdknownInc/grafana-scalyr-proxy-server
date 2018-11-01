@@ -13,4 +13,12 @@ class ElasticSearchMultiSearchResponse
 {
 	/** @var ElasticSearchResponse[] */
 	public $responses = [];
+
+	/**
+	 * @param ElasticSearchResponse $response
+	 */
+	public function AddResponse($response)
+	{
+		$this->responses[] = $response;
+	}
 }

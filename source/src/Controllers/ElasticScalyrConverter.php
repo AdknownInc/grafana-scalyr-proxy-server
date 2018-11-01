@@ -49,7 +49,6 @@ class ElasticScalyrConverter extends Ajax
 		{
 			$stuff = $mid->GrafanaToScalyrQuery($timeSeriesRequest);
 			$this->response = $this->ConvertScalyrResponseToElasticSearch($stuff);
-//			$this->response = $stuff;
 			$this->Respond(200);
 		}
 		catch (\GuzzleHttp\Exception\ClientException $ex)
@@ -123,7 +122,7 @@ class ElasticScalyrConverter extends Ajax
 				$result->AddToResult($dataPoint[1], $dataPoint[0]);
 			}
 
-			$finalResponse->responses[] = $result;
+			$finalResponse->AddResponse($result);
 		}
 
 		return $finalResponse;
@@ -156,14 +155,14 @@ class ElasticScalyrConverter extends Ajax
 
 		$dateTime = new \DateTime();
 
-		$dateTime->setTime(($ms / (1000*60*60)) % 24, ($ms / (1000*60)) % 60, ($ms / 1000) % 60, $ms * 1000);
+		$dateTime->setTime(($ms / (1000*60*60)) % 24, ($ms / (1000*60)) % 60, ($ms / 1000) % 60);
 
 		$complete .= $dateTime->format('H:i:s.000') . "Z";
 
 		return $complete;
 	}
 
-	private function GetDecodedQueries($json, $assoc = false)
+	public function GetDecodedQueries($json, $assoc = false)
 	{
 		$objects = [];
 
