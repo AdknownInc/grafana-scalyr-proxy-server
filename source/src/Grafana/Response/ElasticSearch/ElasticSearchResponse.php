@@ -6,7 +6,7 @@
  * @since  2018-10-31
  */
 
-namespace Adknown\ProxyScalyr\Grafana\Response\ElasticSearch;
+namespace Adknown\ProxyScalyr\Grafana\Response\ElasticSearchFaker;
 
 
 class ElasticSearchResponse

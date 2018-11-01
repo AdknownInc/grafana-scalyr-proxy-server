@@ -10,8 +10,7 @@
 //must match this version
 const PATTERNS = [
 	'/^7.1/',
-	'/^7.2/',
-	'/^7.3/'
+	'/^7.2/'
 ];
 $matched = false;
 foreach(PATTERNS as $pattern)

@@ -11,18 +11,49 @@ namespace Adknown\ProxyScalyr\Controllers;
 
 use Adknown\ProxyScalyr\Grafana\Request\Range;
 use Adknown\ProxyScalyr\Grafana\Request\Target;
-use Adknown\ProxyScalyr\Grafana\Response\ElasticSearch\ElasticSearchMultiSearchResponse;
-use Adknown\ProxyScalyr\Grafana\Response\ElasticSearch\ElasticSearchResponse;
+use Adknown\ProxyScalyr\Grafana\Response\ElasticSearchFaker\ElasticSearchMultiSearchResponse;
+use Adknown\ProxyScalyr\Grafana\Response\ElasticSearchFaker\ElasticSearchResponse;
 use Adknown\ProxyScalyr\Logging\LoggerImpl;
+use Adknown\ProxyScalyr\StatusCodes;
 use Karriere\JsonDecoder\JsonDecoder;
 
 class ElasticScalyrConverter extends Ajax
 {
+	//Divide milliseconds by these to get desired values
+	const MS_TO_HOURS = 3600000;
+	const MS_TO_MINUTES = 60000;
+	const MS_TO_SECONDS = 1000;
+
+	const REDUCE_INTERVAL_MS = 360;
+
+	const DEFAULT_TIMESERIES_MAXDATAPOINTS = 479;
+
+	/**
+	 * @throws \Exception
+	 */
 	protected function Get()
 	{
-		$this->RespondUnsupportedMethod();
+		$res = [
+			"scalyr" => [
+				"mappings" => [
+					"_doc" => [
+						"properties" => [
+							"@timestamp" => [
+								"type" => "date",
+								"format" => "epoch_millis"
+							]
+						]
+					]
+				]
+			]
+		];
+		//For some reason, grafana only likes the response if we do it this way >:|
+		die(json_encode($res));
 	}
 
+	/**
+	 * @throws \Exception
+	 */
 	protected function Put()
 	{
 		$this->RespondUnsupportedMethod();
@@ -49,7 +80,7 @@ class ElasticScalyrConverter extends Ajax
 		{
 			$this->response = new ElasticSearchMultiSearchResponse();
 			$this->response->message = $e->getMessage();
-			$this->Respond(400);
+			$this->Respond(StatusCodes::HTTP_BAD_REQUEST);
 		}
 
 		$mid = new Middleware();
@@ -57,7 +88,7 @@ class ElasticScalyrConverter extends Ajax
 		{
 			$stuff = $mid->GrafanaToScalyrQuery($timeSeriesRequest);
 			$this->response = $this->ConvertScalyrResponseToElasticSearch($stuff);
-			$this->Respond(200);
+			$this->Respond(StatusCodes::HTTP_OK);
 		}
 		catch (\GuzzleHttp\Exception\ClientException $ex)
 		{
@@ -98,10 +129,10 @@ class ElasticScalyrConverter extends Ajax
 
 		$timeSeriesRequest->range = $range;
 
-		$intervalMs = (($to - $from) / 360);
+		$intervalMs = (($to - $from) / self::REDUCE_INTERVAL_MS);
 
-		$timeSeriesRequest->interval = ($intervalMs / 1000) . "s";
-		$timeSeriesRequest->maxDataPoints = 479;
+		$timeSeriesRequest->interval = ($intervalMs / self::MS_TO_SECONDS) . "s";
+		$timeSeriesRequest->maxDataPoints = self::DEFAULT_TIMESERIES_MAXDATAPOINTS;
 
 		//Get targets from all queries
 		$targetArray = $this->GetTargetArrayFromQueries($elasticSearchRequests);
@@ -183,7 +214,7 @@ class ElasticScalyrConverter extends Ajax
 
 		$dateTime = new \DateTime();
 
-		$dateTime->setTime(($ms / (1000*60*60)) % 24, ($ms / (1000*60)) % 60, ($ms / 1000) % 60);
+		$dateTime->setTime(($ms / self::MS_TO_HOURS) % 24, ($ms / self::MS_TO_MINUTES) % 60, ($ms / self::MS_TO_SECONDS) % 60);
 
 		$complete .= $dateTime->format('H:i:s.000') . "Z";
 
@@ -204,6 +235,9 @@ class ElasticScalyrConverter extends Ajax
 		return $objects;
 	}
 
+	/**
+	 * @throws \Exception
+	 */
 	protected function Delete()
 	{
 		$this->RespondUnsupportedMethod();

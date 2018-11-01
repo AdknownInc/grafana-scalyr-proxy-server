@@ -12,19 +12,20 @@ use Adknown\ProxyScalyr\Controllers\ElasticScalyrConverter;
 use Adknown\ProxyScalyr\Grafana\Request\Range;
 use Adknown\ProxyScalyr\Grafana\Request\Target;
 use Adknown\ProxyScalyr\Grafana\Request\TimeSeries;
-use Adknown\ProxyScalyr\Grafana\Response\ElasticSearch\ElasticSearchMultiSearchResponse;
-use Adknown\ProxyScalyr\Grafana\Response\ElasticSearch\ElasticSearchResponse;
-use Adknown\ProxyScalyr\Grafana\Response\ElasticSearch\Hits;
-use Adknown\ProxyScalyr\Grafana\Response\ElasticSearch\Shards;
+use Adknown\ProxyScalyr\Grafana\Response\ElasticSearchFaker\ElasticSearchMultiSearchResponse;
+use Adknown\ProxyScalyr\Grafana\Response\ElasticSearchFaker\ElasticSearchResponse;
+use Adknown\ProxyScalyr\Grafana\Response\ElasticSearchFaker\Hits;
+use Adknown\ProxyScalyr\Grafana\Response\ElasticSearchFaker\Shards;
 use Adknown\ProxyScalyr\Grafana\Response\Query\TimeSeriesTarget;
-use Karriere\JsonDecoder\JsonDecoder;
-use PHPUnit\Util\Json;
 
 class ElasticScalyrConverterTest extends \PHPUnit\Framework\TestCase
 {
 	const ELASTIC_TWO_QUERIES_REQUEST_FILE = __DIR__ . "/ElasticRequests/TwoQueries.txt";
 	const SCALYR_TWO_QUERIE_RESPONSE_FILE = __DIR__ . "/ScalyrResponses/TwoResponses.json";
 
+	/**
+	 * @throws \Exception
+	 */
 	public function testGetTargetArrayFromQueries()
 	{
 		$converter = new ElasticScalyrConverter();
@@ -57,6 +58,9 @@ class ElasticScalyrConverterTest extends \PHPUnit\Framework\TestCase
 		$this->assertEquals($expectedTargetArray, $targetArrayResult);
 	}
 
+	/**
+	 * @throws \Exception
+	 */
 	public function testConvertElasticSearchRequestToScalyr()
 	{
 		$converter = new ElasticScalyrConverter();
@@ -310,6 +314,6 @@ class ElasticScalyrConverterTest extends \PHPUnit\Framework\TestCase
 					],
 			];
 
-		$this->assertEquals($result, $result);
+		$this->assertEquals($expected, $result);
 	}
 }
