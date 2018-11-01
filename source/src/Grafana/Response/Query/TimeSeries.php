@@ -40,4 +40,12 @@ class TimeSeries implements \JsonSerializable
 
 		return $return;
 	}
+
+	/**
+	 * @return TimeSeriesTarget[]
+	 */
+	public function GetTargets()
+	{
+		return $this->targets;
+	}
 }

@@ -16,6 +16,27 @@ try
 {
 	switch($parsed['path'])
 	{
+		//Just to satisfy the test when setting the datasource
+		case '/scalyr/_mapping':
+			$res = [
+				"scalyr" => [
+					"mappings" => [
+						"_doc" => [
+							"properties" => [
+								"@timestamp" => [
+									"type" => "date",
+									"format" => "epoch_millis"
+								]
+							]
+						]
+					]
+				]
+			];
+			die(json_encode($res));
+		case '/_msearch':
+			$controller = new \Adknown\ProxyScalyr\Controllers\ElasticScalyrConverter();
+			$controller->HandleRequest();
+			break;
 		case '/':
 			die(200);
 		case '/query':

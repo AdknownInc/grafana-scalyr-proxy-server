@@ -1,4 +1,6 @@
-FROM grafana/grafana:5.0.0
+FROM grafana/grafana:5.3.2
+
+USER root
 
 RUN apt-get clean && \
     apt-get update && \
