@@ -34,15 +34,23 @@ class ElasticScalyrConverter extends Ajax
 	 */
 	protected function Post()
 	{
-		$input = file_get_contents('php://input');
-		$decodedRequests = $this->GetDecodedQueries($input, true);
-
-		if($decodedRequests === null)
+		try
 		{
-			throw new \Exception("Unable to decode grafana elasticsearch request");
-		}
+			$input = file_get_contents('php://input');
+			$decodedRequests = $this->GetDecodedQueries($input, true);
 
-		$timeSeriesRequest = $this->ConvertElasticSearchRequestToScalyr($decodedRequests);
+			if($decodedRequests === null)
+			{
+				throw new \Exception("Unable to decode grafana elasticsearch request");
+			}
+			$timeSeriesRequest = $this->ConvertElasticSearchRequestToScalyr($decodedRequests);
+		}
+		catch(\Exception $e)
+		{
+			$this->response = new ElasticSearchMultiSearchResponse();
+			$this->response->message = $e->getMessage();
+			$this->Respond(400);
+		}
 
 		$mid = new Middleware();
 		try
@@ -71,6 +79,7 @@ class ElasticScalyrConverter extends Ajax
 	/**
 	 * @param $elasticSearchRequests
 	 * @return \Adknown\ProxyScalyr\Grafana\Request\TimeSeries
+	 * @throws \Exception
 	 */
 	public function ConvertElasticSearchRequestToScalyr($elasticSearchRequests)
 	{
@@ -131,6 +140,7 @@ class ElasticScalyrConverter extends Ajax
 	/**
 	 * @param $requests
 	 * @return Target[]
+	 * @throws \Exception
 	 */
 	public function GetTargetArrayFromQueries($requests)
 	{
@@ -140,7 +150,25 @@ class ElasticScalyrConverter extends Ajax
 		{
 			$targetArrayJson = $request["query"]["bool"]["filter"][1]["query_string"]["query"];
 
-			$targetArray[] = $jsonDecoder->decode($targetArrayJson, Target::class);
+			if($targetArrayJson === "*")
+			{
+				throw new \Exception("Empty query provided");
+			}
+
+			/** @var Target $target */
+			$target = $jsonDecoder->decode($targetArrayJson, Target::class);
+			if(!$target)
+			{
+				throw new \Exception("Error decoding query field, make sure appropriate characters are escaped");
+			}
+			$target->percentage = is_null($target->percentage) ? 25 : $target->percentage;
+			$target->graphFunction = is_null($target->graphFunction) ? "mean" : $target->graphFunction;
+			$target->type = is_null($target->type) ? "complex numeric query" : $target->type;
+			$target->secondsInterval = is_null($target->secondsInterval) ? 60 : $target->secondsInterval;
+			$target->chosenType = is_null($target->chosenType) ? "minute" : $target->chosenType;
+			$target->intervalType = is_null($target->intervalType) ? "window" : $target->intervalType;
+
+			$targetArray[] = $target;
 		}
 
 		return $targetArray;

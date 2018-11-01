@@ -45,6 +45,7 @@ class ElasticScalyrConverterTest extends \PHPUnit\Framework\TestCase
 			$expectedTarget->chosenType = "minute";
 			$expectedTarget->target = "t";
 			$expectedTarget->type = "complex numeric query";
+			$expectedTarget->intervalType = "window";
 			$expectedTargetArray[] = $expectedTarget;
 		}
 
@@ -78,6 +79,7 @@ class ElasticScalyrConverterTest extends \PHPUnit\Framework\TestCase
 			$expectedTarget->chosenType = "minute";
 			$expectedTarget->target = "t";
 			$expectedTarget->type = "complex numeric query";
+			$expectedTarget->intervalType = "window";
 			$expectedTargetArray[] = $expectedTarget;
 		}
 
