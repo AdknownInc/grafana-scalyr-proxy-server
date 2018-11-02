@@ -16,6 +16,12 @@ try
 {
 	switch($parsed['path'])
 	{
+		//Just to satisfy the test when setting the datasource
+		case '/scalyr/_mapping':
+		case '/_msearch':
+			$controller = new \Adknown\ProxyScalyr\Controllers\ElasticScalyrConverter();
+			$controller->HandleRequest();
+			break;
 		case '/':
 			die(200);
 		case '/query':
