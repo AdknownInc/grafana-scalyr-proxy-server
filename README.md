@@ -57,6 +57,20 @@ At the end, you'll see this:
 
 And that's it, you have configured the scalyr data source.
 
+## Alerts - ElasticSearch Hack
+
+At the moment, grafana does not support alerts of custom datasource plugins. This is because alerts call the backend of grafana and require a custom go function handler to run in response to the alert endpoint being hit.
+
+To allow the use of alerts, this backend will support an elasticsearch datasource plugin to allow alerts. It will require your scalyr queries to be in complex query format, but you'll get grafana alerts out of it.
+
+### ElasticsearchFaker install
+
+#### TODO
+instructions on installing an elasticsearch datasource plugin that points to this proxy server
+
+#### TODO
+instructions on setting up alerts for Scalyr 
+
 # TODO:
 * Add a Contribution guide
 * Add further documentation about numeric vs facet vs complex
