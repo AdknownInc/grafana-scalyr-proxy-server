@@ -14,7 +14,7 @@ use Adknown\ProxyScalyr\Grafana\Request\Target;
 use Adknown\ProxyScalyr\Grafana\Response\ElasticSearchFaker\ElasticSearchMultiSearchResponse;
 use Adknown\ProxyScalyr\Grafana\Response\ElasticSearchFaker\ElasticSearchResponse;
 use Adknown\ProxyScalyr\Logging\LoggerImpl;
-use Adknown\ProxyScalyr\StatusCodes;
+use Adknown\ProxyScalyr\Utilities\StatusCodes;
 use Karriere\JsonDecoder\JsonDecoder;
 
 class ElasticScalyrConverter extends Ajax

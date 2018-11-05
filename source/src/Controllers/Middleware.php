@@ -181,6 +181,7 @@ class Middleware
 		$buckets = $this->CalculateBuckets($start, $end, $queryData->secondsInterval);
 
 		$simpleExpressions = Parser::ParseComplexExpression($queryData->filter, $start, $end, $buckets, $fullVariableExpression);
+		$individualExpressions = $simpleExpressions;
 		foreach($simpleExpressions as $key => $scalyrParams)
 		{
 			if($scalyrParams instanceof Numeric)
@@ -191,7 +192,10 @@ class Middleware
 		}
 		$fullResponse = Parser::NewEvaluateExpression($fullVariableExpression, $simpleExpressions);
 
-		return $this->ConvertScalyrNumericToGrafana($fullResponse, $queryData->target, $start, $queryData->secondsInterval);
+		$target = $this->ConvertScalyrNumericToGrafana($fullResponse, $queryData->target, $start, $queryData->secondsInterval);
+		$target->individualQueries = $individualExpressions;
+
+		return $target;
 	}
 
 	/**
@@ -223,7 +227,9 @@ class Middleware
 					$grafResponse->AddTarget($this->GetNumericQueryTarget($request, $queryData));
 					break;
 				case 'complex numeric query':
-					$grafResponse->AddTarget($this->GetComplexQueryTarget($request, $queryData));
+					$target = $this->GetComplexQueryTarget($request, $queryData);
+					$target->refId = $queryData->refId;
+					$grafResponse->AddTarget($target);
 					break;
 				case 'facet query':
 					throw new \Exception("facet queries not yet implemented");

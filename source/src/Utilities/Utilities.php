@@ -6,7 +6,7 @@
  * Time: 19:05
  */
 
-namespace Adknown\ProxyScalyr;
+namespace Adknown\ProxyScalyr\Utilities;
 
 
 class Utilities
