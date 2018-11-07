@@ -229,7 +229,10 @@ class Middleware
 					break;
 				case 'complex numeric query':
 					$target = $this->GetComplexQueryTarget($request, $queryData);
-					$target->refId = $queryData->refId;
+					if($request->parseComplex === true)
+					{
+						$target->refId = $queryData->refId;
+					}
 					$grafResponse->AddTarget($target);
 					break;
 				case 'facet query':

@@ -35,4 +35,9 @@ class TimeSeries
 	 * @var int
 	 */
 	public $maxDataPoints;
+
+	/**
+	 * @var bool
+	 */
+	public $parseComplex;
 }
