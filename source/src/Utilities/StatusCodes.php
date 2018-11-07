@@ -64,7 +64,7 @@ class StatusCodes
 	const HTTP_SERVICE_UNAVAILABLE = 503;
 	const HTTP_GATEWAY_TIMEOUT = 504;
 	const HTTP_VERSION_NOT_SUPPORTED = 505;
-	private static $messages = array(
+	private static $messages = [
 		// [Informational 1xx]
 		100 => '100 Continue',
 		101 => '101 Switching Protocols',
@@ -111,7 +111,7 @@ class StatusCodes
 		503 => '503 Service Unavailable',
 		504 => '504 Gateway Timeout',
 		505 => '505 HTTP Version Not Supported'
-	);
+	];
 
 	public static function httpHeaderFor($code, string $version = self::VERSION_1_1)
 	{

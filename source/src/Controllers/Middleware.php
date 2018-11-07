@@ -153,10 +153,10 @@ class Middleware
 		}
 
 		$start -= $queryData->secondsInterval;
-		$buckets = $this->CalculateBuckets($start, $end, $queryData->secondsInterval);
+		$buckets = self::CalculateBuckets($start, $end, $queryData->secondsInterval);
 		$response = $this->GetScalyrNumericResponse($queryData, $start, $end, $buckets);
 
-		$grafanaTarget = $this->ConvertScalyrNumericToGrafana($response, $queryData->target, $start, $queryData->secondsInterval);
+		$grafanaTarget = self::ConvertScalyrNumericToGrafana($response, $queryData->target, $start, $queryData->secondsInterval);
 
 		if(isset($remainderValue) && isset($remainderEnd))
 		{
@@ -178,7 +178,7 @@ class Middleware
 	{
 		$start = $request->range->GetFromAsTimestamp();
 		$end = $request->range->GetToAsTimestamp();
-		$buckets = $this->CalculateBuckets($start, $end, $queryData->secondsInterval);
+		$buckets = self::CalculateBuckets($start, $end, $queryData->secondsInterval);
 
 		$simpleExpressions = Parser::ParseComplexExpression($queryData->filter, $start, $end, $buckets, $fullVariableExpression);
 		$individualExpressions = $simpleExpressions;
@@ -192,7 +192,7 @@ class Middleware
 		}
 		$fullResponse = Parser::NewEvaluateExpression($fullVariableExpression, $simpleExpressions);
 
-		$target = $this->ConvertScalyrNumericToGrafana($fullResponse, $queryData->target, $start, $queryData->secondsInterval);
+		$target = self::ConvertScalyrNumericToGrafana($fullResponse, $queryData->target, $start, $queryData->secondsInterval);
 		$target->individualQueries = $individualExpressions;
 
 		return $target;
