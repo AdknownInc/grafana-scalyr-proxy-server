@@ -14,7 +14,7 @@
 
 namespace Adknown\ProxyScalyr\Logging;
 
-use Adknown\ProxyScalyr\Utilities;
+use Adknown\ProxyScalyr\Utilities\Utilities;
 
 abstract class aLogger
 {

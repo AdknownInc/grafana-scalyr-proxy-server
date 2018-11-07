@@ -9,7 +9,7 @@
  * @package recess.http
  */
 
-namespace Adknown\ProxyScalyr;
+namespace Adknown\ProxyScalyr\Utilities;
 
 class StatusCodes
 {
