@@ -34,7 +34,9 @@ class TimeSeries implements \JsonSerializable
 		{
 			$return[] = [
 				"target" => $target->target,
-				"datapoints" => $target->datapoints
+				"datapoints" => $target->datapoints,
+				"queries" => $target->individualQueries,
+				"refId" => $target->refId
 			];
 		}
 

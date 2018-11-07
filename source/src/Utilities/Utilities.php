@@ -76,7 +76,7 @@ class Utilities
 		}
 
 		//Remove local IP and local subnet
-		$final = array();
+		$final = [];
 
 		//Filter out 127.*, 192.168.*, 10.*, 244.*, 0.*
 		foreach($arr as $ip)

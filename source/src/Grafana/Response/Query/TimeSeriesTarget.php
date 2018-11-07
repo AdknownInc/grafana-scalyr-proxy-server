@@ -21,6 +21,10 @@ class TimeSeriesTarget
 	 */
 	public $datapoints;
 
+	public $refId;
+
+	public $individualQueries = [];
+
 	/**
 	 * Multiplies $time by 1000 to convert it into milliseconds
 	 *

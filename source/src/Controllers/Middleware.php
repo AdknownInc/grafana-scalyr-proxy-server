@@ -154,10 +154,10 @@ class Middleware
 		}
 
 		$start -= $queryData->secondsInterval;
-		$buckets = $this->CalculateBuckets($start, $end, $queryData->secondsInterval);
+		$buckets = self::CalculateBuckets($start, $end, $queryData->secondsInterval);
 		$response = $this->GetScalyrNumericResponse($queryData, $start, $end, $buckets);
 
-		$grafanaTarget = $this->ConvertScalyrNumericToGrafana($response, $queryData->target, $start, $queryData->secondsInterval);
+		$grafanaTarget = self::ConvertScalyrNumericToGrafana($response, $queryData->target, $start, $queryData->secondsInterval);
 
 		if(isset($remainderValue) && isset($remainderEnd))
 		{
@@ -179,9 +179,10 @@ class Middleware
 	{
 		$start = $request->range->GetFromAsTimestamp();
 		$end = $request->range->GetToAsTimestamp();
-		$buckets = $this->CalculateBuckets($start, $end, $queryData->secondsInterval);
+		$buckets = self::CalculateBuckets($start, $end, $queryData->secondsInterval);
 
 		$simpleExpressions = Parser::ParseComplexExpression($queryData->filter, $start, $end, $buckets, $fullVariableExpression);
+		$individualExpressions = $simpleExpressions;
 		foreach($simpleExpressions as $key => $scalyrParams)
 		{
 			if($scalyrParams instanceof Numeric)
@@ -192,7 +193,10 @@ class Middleware
 		}
 		$fullResponse = Parser::NewEvaluateExpression($fullVariableExpression, $simpleExpressions);
 
-		return $this->ConvertScalyrNumericToGrafana($fullResponse, $queryData->target, $start, $queryData->secondsInterval);
+		$target = self::ConvertScalyrNumericToGrafana($fullResponse, $queryData->target, $start, $queryData->secondsInterval);
+		$target->individualQueries = $individualExpressions;
+
+		return $target;
 	}
 
 	/**
@@ -224,7 +228,9 @@ class Middleware
 					$grafResponse->AddTarget($this->GetNumericQueryTarget($request, $queryData));
 					break;
 				case 'complex numeric query':
-					$grafResponse->AddTarget($this->GetComplexQueryTarget($request, $queryData));
+					$target = $this->GetComplexQueryTarget($request, $queryData);
+					$target->refId = $queryData->refId;
+					$grafResponse->AddTarget($target);
 					break;
 				case 'facet query':
 					throw new \Exception("facet queries not yet implemented");
