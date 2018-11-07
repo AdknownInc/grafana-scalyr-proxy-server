@@ -31,7 +31,8 @@ class Middleware
 
 	public function __construct()
 	{
-		$this->api = new SDK(getenv('SCALYR_READ_KEY'));
+		$readKey = empty($_SERVER['HTTP_X_SCALYR_READ_KEY']) ? getenv('SCALYR_READ_KEY') : $_SERVER['HTTP_X_SCALYR_READ_KEY'];
+		$this->api = new SDK($readKey);
 	}
 
 	/**
@@ -228,7 +229,10 @@ class Middleware
 					break;
 				case 'complex numeric query':
 					$target = $this->GetComplexQueryTarget($request, $queryData);
-					$target->refId = $queryData->refId;
+					if($request->parseComplex === true)
+					{
+						$target->refId = $queryData->refId;
+					}
 					$grafResponse->AddTarget($target);
 					break;
 				case 'facet query':

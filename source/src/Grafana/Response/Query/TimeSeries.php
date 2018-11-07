@@ -32,12 +32,16 @@ class TimeSeries implements \JsonSerializable
 		$return = [];
 		foreach ($this->targets as $target)
 		{
-			$return[] = [
+			$returnArr = [
 				"target" => $target->target,
-				"datapoints" => $target->datapoints,
-				"queries" => $target->individualQueries,
-				"refId" => $target->refId
+				"datapoints" => $target->datapoints
 			];
+			if(isset($target->refId))
+			{
+				$returnArr["queries"] = $target->individualQueries;
+				$returnArr["refId"] = $target->refId;
+			}
+			$return[] = $returnArr;
 		}
 
 		return $return;
