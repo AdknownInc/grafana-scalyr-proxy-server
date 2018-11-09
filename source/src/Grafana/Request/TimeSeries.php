@@ -17,6 +17,31 @@ class TimeSeries
 	public $panelId;
 
 	/**
+	 * @var string
+	 */
+	public $panelName;
+
+	/**
+	 * @var string
+	 */
+	public $user;
+
+	/**
+	 * @var int
+	 */
+	public $userId;
+
+	/**
+	 * @var string
+	 */
+	public $org;
+
+	/**
+	 * @var int
+	 */
+	public $orgId;
+
+	/**
 	 * @var Range
 	 */
 	public $range;
@@ -40,4 +65,21 @@ class TimeSeries
 	 * @var bool
 	 */
 	public $parseComplex;
+
+	/**
+	 * Returns information about the request for logging purposes
+	 * @return array
+	 */
+	public function GetLoggingInfo()
+	{
+		return [
+			"Username" => $this->user,
+			"User Id" => $this->userId,
+			"Org name" => $this->org,
+			"Org Id" => $this->orgId,
+			"Panel Name" => $this->panelName,
+			"Panel Id" => $this->panelId
+		];
+	}
+
 }
