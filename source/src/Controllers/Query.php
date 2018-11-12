@@ -34,6 +34,7 @@ class Query extends Ajax
 
 		$mid = new Middleware();
 		$input = file_get_contents('php://input');
+		/* @var TimeSeries $timeSeriesRequest*/
 		$timeSeriesRequest = $jsonDecoder->decode($input, TimeSeries::class);
 		try
 		{
@@ -43,7 +44,7 @@ class Query extends Ajax
 		}
 		catch (\GuzzleHttp\Exception\ClientException $ex)
 		{
-			LoggerImpl::Exception($ex);
+			LoggerImpl::Exception($ex, '', $timeSeriesRequest->GetLoggingInfo());
 			//get the message out the exception
 			list($metaResponse, $response) = explode("response:", $ex->getMessage(), 2);
 			$resparray = json_decode($response, true);
@@ -52,7 +53,7 @@ class Query extends Ajax
 		}
 		catch (\Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException $ex)
 		{
-			LoggerImpl::Exception($ex);
+			LoggerImpl::Exception($ex, '', $timeSeriesRequest->GetLoggingInfo());
 			$message = "Selected time interval too small for selected time range. Logic to make multiple Scalyr requests to get the required data points not yet implementeed. " . $ex->getMessage();
 			$this->RespondError($message);
 		}
