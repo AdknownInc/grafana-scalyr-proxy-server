@@ -42,7 +42,7 @@ services:
       - "./grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini"
       - "./grafana/provisioning:/etc/grafana/provisioning"
       - "./grafana/dashboard-layouts/:/usr/share/grafana/dashboard-layouts"
-      - "../../grafana-scalyr-datasource-plugin:/var/lib/grafana/plugins/grafana-scalyr-datasource-plugin"
+      - ${RELATIVE_SCALYR_DATASOURCE_PLUGIN_DIR}:/var/lib/grafana/plugins/grafana-scalyr-datasource-plugin"
   scalyr:
     container_name: scalyr_grafana_scalyr
     image: scalyr/scalyr-docker-agent
