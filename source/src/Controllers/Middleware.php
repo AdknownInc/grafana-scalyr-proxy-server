@@ -31,7 +31,15 @@ class Middleware
 
 	public function __construct()
 	{
-		$readKey = empty($_SERVER['HTTP_X_SCALYR_READ_KEY']) ? getenv('SCALYR_READ_KEY') : $_SERVER['HTTP_X_SCALYR_READ_KEY'];
+		//"<no value>" is what grafana populates when no read key is given
+		if(empty($_SERVER['HTTP_X_SCALYR_READ_KEY']) || $_SERVER['HTTP_X_SCALYR_READ_KEY'] === "<no value>")
+		{
+			$readKey = getenv('SCALYR_READ_KEY');
+		}
+		else
+		{
+			$readKey = $_SERVER['HTTP_X_SCALYR_READ_KEY'];
+		}
 		$this->api = new SDK($readKey);
 	}
 
