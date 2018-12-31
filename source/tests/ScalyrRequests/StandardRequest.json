@@ -1,0 +1,51 @@
+{
+  "timezone": "browser",
+  "panelId": 2,
+  "dashboardId": 1,
+  "range": {
+    "from": "2018-11-12T14:15:32.206Z",
+    "to": "2018-11-12T20:15:32.206Z",
+    "raw": {
+      "from": "now-6h",
+      "to": "now"
+    }
+  },
+  "rangeRaw": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "interval": "20s",
+  "intervalMs": 20000,
+  "targets": [
+    {
+      "chosenType": "minute",
+      "filter": "count(message contains \"error\")",
+      "graphFunction": "mean",
+      "intervalType": "window",
+      "percentage": 25,
+      "placeholder": "target 1",
+      "refId": "A",
+      "secondsInterval": 60,
+      "showQueryParts": true,
+      "target": "t",
+      "type": "complex numeric query"
+    }
+  ],
+  "maxDataPoints": 960,
+  "scopedVars": {
+    "__interval": {
+      "text": "20s",
+      "value": "20s"
+    },
+    "__interval_ms": {
+      "text": 20000,
+      "value": 20000
+    }
+  },
+  "parseComplex": true,
+  "user": "admin",
+  "userId": 1,
+  "org": "Main Org.",
+  "orgId": 1,
+  "panelName": "Panel Title"
+}
