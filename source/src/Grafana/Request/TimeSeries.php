@@ -67,18 +67,24 @@ class TimeSeries
 	public $parseComplex;
 
 	/**
+	 * @var bool Determines whether a numeric or timeseries query should be used.
+	 *           Numeric queries are good for adhoc queries and figuring how what query you want.
+	 */
+	public $useNumeric = false;
+
+	/**
 	 * Returns information about the request for logging purposes
 	 * @return array
 	 */
 	public function GetLoggingInfo()
 	{
 		return [
-			"Username" => $this->user,
-			"User Id" => $this->userId,
-			"Org name" => $this->org,
-			"Org Id" => $this->orgId,
+			"Username"   => $this->user,
+			"User Id"    => $this->userId,
+			"Org name"   => $this->org,
+			"Org Id"     => $this->orgId,
 			"Panel Name" => $this->panelName,
-			"Panel Id" => $this->panelId
+			"Panel Id"   => $this->panelId
 		];
 	}
 

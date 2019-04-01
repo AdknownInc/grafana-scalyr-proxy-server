@@ -10,8 +10,10 @@ namespace Adknown\ProxyScalyr\Scalyr;
 
 
 use Adknown\ProxyScalyr\Scalyr\Request\Numeric;
+use Adknown\ProxyScalyr\Scalyr\Request\TimeSeriesQuery;
 use Adknown\ProxyScalyr\Scalyr\Response\FacetResponse;
 use Adknown\ProxyScalyr\Scalyr\Response\NumericResponse;
+use Adknown\ProxyScalyr\Scalyr\Response\TimeSeriesResponse;
 use \Exception;
 use GuzzleHttp\Client;
 
@@ -27,17 +29,26 @@ class SDK
 
 	/** @var Client */
 	private $client;
+	/**
+	 * @var string Used for numeric and facet queries
+	 */
 	private $readLogsKey;
+	/**
+	 * @var string Used for timeseries queries
+	 */
+	private $readConfigKey;
 
 	/**
 	 * SDK constructor.
 	 *
 	 * @param string $readLogsKey The scalyr key that has access to the scalyr logs
+	 * @param string $readConfigKey The scalyr key that has access to the account's configuration, read only
 	 */
-	public function __construct(string $readLogsKey)
+	public function __construct(string $readLogsKey, string $readConfigKey)
 	{
 		$this->client = new Client();
 		$this->readLogsKey = $readLogsKey;
+		$this->readConfigKey = $readConfigKey;
 	}
 
 	/**
@@ -111,6 +122,33 @@ class SDK
 		]);
 
 		return new NumericResponse($response->getBody()->getContents());
+	}
+
+	/**
+	 * @param TimeSeriesQuery[] $queries
+	 *
+	 * @return NumericResponse
+	 * @throws \GuzzleHttp\Exception\GuzzleException
+	 */
+	public function TimeSeriesQuery(array $queries)
+	{
+		$url = self::BASE_API_URL . "/timeseriesQuery";
+		$body = [
+			"token" => $this->readConfigKey,
+			"queries" => $queries
+		];
+
+		$response = $this->client->request("POST", $url, [
+			'json' => $body,
+			'headers' => [
+				'Content-Type' => 'application/json',
+				'cache-control' => 'no-cache'
+			]
+		]);
+
+		//TODO: parse this out to be proper timeSeriesResponse
+		$tsResponse = new TimeSeriesResponse($response->getBody()->getContents());
+		return $tsResponse->GetAsNumeric();
 	}
 
 	/**

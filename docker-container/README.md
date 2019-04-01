@@ -1,18 +1,18 @@
-# Demo - Docker Basics
-
-Adding a temp README to the repo for quick docker tips since there isn't a formal home for those at the moment and the team plans to adopt docker.
-
+# Demo
 ## Getting Started
+
+Copy the existing `.env.example` file into a `.env` file, filling in the required scalyr Logs Access read key as well as a Configuration Access read key.
+ 
 To launch the grafana scalyr demo, cd into the 'docker-container' folder and call ```docker-compose up```.
 
-## Making Changes
-To have your container-level changes take effect (such as adding or removing a service, or installing something in the container) you'll need to restart the containers.
-Run reset.sh and it will bring your container down and remove any built containers. You can then restart the container and your changes will have taken effect
+## Development
+If you're doing dev work, cd into the `source` directory and run `composer install`
 
+Then run `docker-compose -f docker-compose-dev.yml up` to use the dev version of the docker-compose which will allow adhoc development of the server
 
-## Modifying images
-Sometimes you'll want to know the location of configuration files so that you can modify them with sed commands in the build phase. Their locations are not always obvious, so to find them you can get shell access into your active container by running
-```docker exec -it $CONTAINER_NAME bash```
+## Additional Notes
+For whatever reason the mysql container was having issues with initializing a `grafana` schema. Possibly will need to connect to the mysql instance and create one manually if this is the first time booting up the container
+
 
   
 

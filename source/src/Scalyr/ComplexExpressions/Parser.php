@@ -10,6 +10,7 @@ namespace Adknown\ProxyScalyr\Scalyr\ComplexExpressions;
 
 use Adknown\ProxyScalyr\Logging\LoggerImpl;
 use Adknown\ProxyScalyr\Scalyr\Request\Numeric;
+use Adknown\ProxyScalyr\Scalyr\Request\TimeSeriesQuery;
 use Adknown\ProxyScalyr\Scalyr\Response\NumericResponse;
 
 class Parser
@@ -36,7 +37,7 @@ class Parser
 	 * @return array
 	 * @throws \Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException
 	 */
-	public static function ParseComplexExpression($expression, $start, $end, $buckets, &$fullVariableExpression)
+	public static function ParseComplexExpression($expression, $start, $end, $buckets, &$fullVariableExpression, $useNumeric)
 	{
 		/*
 		 * Match graph public static function calls
@@ -73,14 +74,28 @@ class Parser
 				$field = empty($matches['field']) ? '' : $matches['field'];
 				//Get the type of query based of of keyword
 
-				$varArray[$varCount] = new Numeric(
-					$filter,
-					$graphFunction,
-					$field,
-					$start,
-					$end,
-					$buckets
-			);
+				if ($useNumeric === true)
+				{
+					$varArray[$varCount] = new Numeric(
+						$filter,
+						$graphFunction,
+						$field,
+						$start,
+						$end,
+						$buckets
+					);
+				}
+				else
+				{
+					$varArray[$varCount] = new TimeSeriesQuery(
+						$filter,
+						$graphFunction,
+						$field,
+						$start,
+						$end,
+						$buckets
+					);
+				}
 				$varCount++;
 			}
 			$expression = preg_replace($graphFunctionRegex, $replaceString, $expression, 1, $foundCount);

@@ -12,6 +12,7 @@ use Adknown\ProxyScalyr\Grafana\Request\Target;
 use Adknown\ProxyScalyr\Grafana\Response\Query\TimeSeriesTarget;
 use Adknown\ProxyScalyr\Scalyr\ComplexExpressions\Parser;
 use Adknown\ProxyScalyr\Scalyr\Request\Numeric;
+use Adknown\ProxyScalyr\Scalyr\Request\TimeSeriesQuery;
 use Adknown\ProxyScalyr\Scalyr\Response\FacetResponse;
 use Adknown\ProxyScalyr\Scalyr\Response\NumericResponse;
 use Adknown\ProxyScalyr\Scalyr\SDK;
@@ -23,24 +24,40 @@ class Middleware
 	 */
 	private $api;
 
+	/**
+	 * @var bool Whether or not to send numeric queries or to send them as TimeSeries queries
+	 */
+	private $useNumeric;
+
 	const QUERY_TYPES = [
 		'numeric query'         => 0,
 		'facet query'           => 0,
 		'complex numeric query' => 0
 	];
 
-	public function __construct()
+	public function __construct(bool $useNumeric)
 	{
 		//"<no value>" is what grafana populates when no read key is given
 		if(empty($_SERVER['HTTP_X_SCALYR_READ_KEY']) || $_SERVER['HTTP_X_SCALYR_READ_KEY'] === "<no value>")
 		{
-			$readKey = getenv('SCALYR_READ_KEY');
+			$readLogsKey = getenv('SCALYR_READ_KEY');
 		}
 		else
 		{
-			$readKey = $_SERVER['HTTP_X_SCALYR_READ_KEY'];
+			$readLogsKey = $_SERVER['HTTP_X_SCALYR_READ_KEY'];
 		}
-		$this->api = new SDK($readKey);
+
+		if(empty($_SERVER['HTTP_X_SCALYR_READ_CONFIG_KEY']) || $_SERVER['HTTP_X_SCALYR_READ_CONFIG_KEY'] === "<no value>")
+		{
+			$readConfigKey = getenv('SCALYR_READ_CONFIG_KEY');
+		}
+		else
+		{
+			$readConfigKey = $_SERVER['HTTP_X_SCALYR_READ_CONFIG_KEY'];
+		}
+
+		$this->api = new SDK($readLogsKey, $readConfigKey);
+		$this->useNumeric = $useNumeric;
 	}
 
 	/**
@@ -98,16 +115,32 @@ class Middleware
 	 */
 	private function GetScalyrNumericResponse($queryData, $start, $end, $buckets)
 	{
-		return $this->api->NumericQuery(
-			new Numeric(
-				$queryData->filter,
-				$queryData->graphFunction,
-				!empty($queryData->expression) ? $queryData->expression : '',
-				$start,
-				$end,
-				$buckets
-			)
-		);
+		if($this->useNumeric)
+		{
+			return $this->api->NumericQuery(
+				new Numeric(
+					$queryData->filter,
+					$queryData->graphFunction,
+					!empty($queryData->expression) ? $queryData->expression : '',
+					$start,
+					$end,
+					$buckets
+				)
+			);
+		}
+		else
+		{
+			return $this->api->TimeSeriesQuery([
+				new TimeSeriesQuery(
+					$queryData->filter,
+					$queryData->graphFunction,
+					!empty($queryData->expression) ? $queryData->expression : '',
+					$start,
+					$end,
+					$buckets
+				)
+			]);
+		}
 	}
 
 	/**
@@ -157,6 +190,7 @@ class Middleware
 				$remainderEnd
 			);
 
+
 			$start = $startDT->getTimestamp();
 			$end = $endDT->getTimestamp();
 		}
@@ -189,13 +223,18 @@ class Middleware
 		$end = $request->range->GetToAsTimestamp();
 		$buckets = self::CalculateBuckets($start, $end, $queryData->secondsInterval);
 
-		$simpleExpressions = Parser::ParseComplexExpression($queryData->filter, $start, $end, $buckets, $fullVariableExpression);
+		$simpleExpressions = Parser::ParseComplexExpression($queryData->filter, $start, $end, $buckets, $fullVariableExpression, $this->useNumeric);
 		$individualExpressions = $simpleExpressions;
 		foreach($simpleExpressions as $key => $scalyrParams)
 		{
 			if($scalyrParams instanceof Numeric)
 			{
 				$response = $this->api->NumericQuery($scalyrParams);
+				$simpleExpressions[$key] = $response;
+			}
+			else if ($scalyrParams instanceof TimeSeriesQuery)
+			{
+				$response = $this->api->TimeSeriesQuery([$scalyrParams]);
 				$simpleExpressions[$key] = $response;
 			}
 		}

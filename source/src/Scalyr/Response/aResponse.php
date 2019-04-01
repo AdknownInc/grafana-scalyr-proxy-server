@@ -19,7 +19,10 @@ abstract class aResponse
 
 	public function __construct(string $response)
 	{
-		$this->AssignValues(\GuzzleHttp\json_decode($response, true));
+		if (!empty($response))
+		{
+			$this->AssignValues(\GuzzleHttp\json_decode($response, true));
+		}
 	}
 
 	public abstract function AssignValues(array $obj);

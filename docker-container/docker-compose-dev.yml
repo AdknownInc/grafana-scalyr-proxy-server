@@ -11,6 +11,7 @@ services:
       - log-infra-nginx:/var/log/nginx/
     ports:
       - "8000:80"
+      - "8080:8080"
     depends_on:
       - php
   php:
@@ -19,19 +20,9 @@ services:
     volumes:
       - "../source:/var/www/html"
       - log-app:/var/log/myapp
-      - vendor-code:/var/www/html/vendor
     environment:
       - SCALYR_READ_KEY=${SCALYR_READ_KEY}
       - SCALYR_READ_CONFIG_KEY=${SCALYR_READ_CONFIG_KEY}
-    depends_on:
-      - composer
-  composer:
-    container_name: composer_grafana_scalyr
-    image: composer/composer:php7
-    command: install
-    volumes:
-    - vendor-code:/app/vendor
-    - "../source:/app"
   grafana:
     container_name: grafana_grafana_scalyr
     build: grafana/

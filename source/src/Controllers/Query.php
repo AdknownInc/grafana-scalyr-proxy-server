@@ -32,10 +32,11 @@ class Query extends Ajax
 		$jsonDecoder = new JsonDecoder();
 		$jsonDecoder->register(new TimeSeriesTransformer());
 
-		$mid = new Middleware();
+
 		$input = file_get_contents('php://input');
 		/* @var TimeSeries $timeSeriesRequest*/
 		$timeSeriesRequest = $jsonDecoder->decode($input, TimeSeries::class);
+		$mid = new Middleware($timeSeriesRequest->useNumeric);
 		try
 		{
 			$stuff = $mid->GrafanaToScalyrQuery($timeSeriesRequest);
