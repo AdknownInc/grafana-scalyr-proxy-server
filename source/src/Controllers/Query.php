@@ -45,16 +45,15 @@ class Query extends Ajax
 		}
 		catch (\GuzzleHttp\Exception\ClientException $ex)
 		{
-			LoggerImpl::Exception($ex, '', $timeSeriesRequest->GetLoggingInfo());
-			//get the message out the exception
-			list($metaResponse, $response) = explode("response:", $ex->getMessage(), 2);
+			$response = $ex->getResponse()->getBody()->getContents();
 			$resparray = json_decode($response, true);
 			$message = !empty($resparray['message']) ? $resparray['message'] : "Unable to get the error message from scalyr";
+			LoggerImpl::Exception($ex, $message, $timeSeriesRequest->GetLoggingInfo());
 			$this->RespondError($message);
 		}
 		catch (\Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException $ex)
 		{
-			LoggerImpl::Exception($ex, '', $timeSeriesRequest->GetLoggingInfo());
+			LoggerImpl::Exception($ex, 'Bad Buckets Exception', $timeSeriesRequest->GetLoggingInfo());
 			$message = "Selected time interval too small for selected time range. Logic to make multiple Scalyr requests to get the required data points not yet implementeed. " . $ex->getMessage();
 			$this->RespondError($message);
 		}
