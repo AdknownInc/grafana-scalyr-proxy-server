@@ -21,6 +21,11 @@ class Range
 	 */
 	public function GetFromAsTimestamp()
 	{
+		//Alerts don't pass time as a string, they pass as unix ms
+		if(!strtotime($this->from))
+		{
+			return $this->from;
+		}
 		return strtotime($this->from);
 	}
 
@@ -31,6 +36,11 @@ class Range
 	 */
 	public function GetToAsTimestamp()
 	{
+		//Alerts don't pass time as a string, they pass as unix ms
+		if(!strtotime($this->to))
+		{
+			return $this->to;
+		}
 		return strtotime($this->to);
 	}
 
