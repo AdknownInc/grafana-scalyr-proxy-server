@@ -27,11 +27,15 @@ services:
       - composer
   composer:
     container_name: composer_grafana_scalyr
-    image: composer/composer:php7
-    command: install
+    build: composer/
+    command: [update, install --ignore-platform-reqs --no-dev -o -v]
+    environment:
+      - SSH_AUTH_SOCK    
     volumes:
     - vendor-code:/app/vendor
     - "../source:/app"
+    - ~/.ssh:/root/.ssh
+    - $SSH_AUTH_SOCK:$SSH_AUTH_SOCK
   grafana:
     container_name: grafana_grafana_scalyr
     build: grafana/

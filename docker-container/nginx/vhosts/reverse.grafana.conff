@@ -17,7 +17,7 @@ server {
                 }
 
         		secure_link $arg_md5,$arg_expires;
-                secure_link_md5 "$secure_link_expires$uri$user grafanarocks";
+                secure_link_md5 "$secure_link_expires$uri$user examplepass";
 
                 if ($secure_link = "") {
                     set $state "${state}S1";
