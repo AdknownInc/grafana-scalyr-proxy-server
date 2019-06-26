@@ -65,6 +65,19 @@
           "showQueryParts": false,
           "target": "t",
           "type": "complex numeric query"
+        },
+        {
+          "chosenType": "minute",
+          "filter": "100 * count(message contains \"error\") / count(message contains \"success\")",
+          "graphFunction": "mean",
+          "intervalType": "window",
+          "percentage": 25,
+          "placeholder": "target 2",
+          "refId": "B",
+          "secondsInterval": 2400,
+          "showQueryParts": true,
+          "target": "t with constants",
+          "type": "complex numeric query"
         }
       ],
       "thresholds": [],

@@ -23,19 +23,19 @@ services:
     environment:
       - SCALYR_READ_KEY=${SCALYR_READ_KEY}
       - SCALYR_READ_CONFIG_KEY=${SCALYR_READ_CONFIG_KEY}
-#  grafana:
-#    container_name: grafana_grafana_scalyr
-#    build: grafana/
-#    depends_on:
-#      - mysql
-#    restart: unless-stopped
-#    ports:
-#      - 3000:3000
-#    volumes:
-#      - "./grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini"
-#      - "./grafana/provisioning:/etc/grafana/provisioning"
-#      - "./grafana/dashboard-layouts/:/usr/share/grafana/dashboard-layouts"
-#      - ${RELATIVE_SCALYR_DATASOURCE_PLUGIN_DIR}:/var/lib/grafana/plugins/grafana-scalyr-datasource-plugin"
+  grafana:
+    container_name: grafana_grafana_scalyr
+    build: grafana/
+    depends_on:
+      - mysql
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    volumes:
+      - "./grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini"
+      - "./grafana/provisioning:/etc/grafana/provisioning"
+      - "./grafana/dashboard-layouts/:/usr/share/grafana/dashboard-layouts"
+      - ${RELATIVE_SCALYR_DATASOURCE_PLUGIN_DIR}:/var/lib/grafana/plugins/grafana-scalyr-datasource-plugin"
   scalyr:
     container_name: scalyr_grafana_scalyr
     image: scalyr/scalyr-docker-agent
@@ -48,18 +48,18 @@ services:
     - DOCKER_HOST_NAME=grafanaProxy
     - DOCKER_TIER=dev
     - DOCKER_SYSTEM=grafana
-#  mysql:
-#    container_name: mysql_grafana_scalyr
-#    image: mysql:5.7
-#    command: mysqld --sql_mode=""
-#    environment:
-#      MYSQL_ROOT_PASSWORD: example
-#    ports:
-#    - "3306:3306"
-#    volumes:
-#    - mysql_data:/var/lib/mysql/
-#    - "./mysql/data:/docker-entrypoint-initdb.d"
-#    - "./mysql/config:/etc/mysql/conf.d"
+  mysql:
+    container_name: mysql_grafana_scalyr
+    image: mysql:5.7
+    command: mysqld --sql_mode=""
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+    ports:
+    - "3306:3306"
+    volumes:
+    - mysql_data:/var/lib/mysql/
+    - "./mysql/data:/docker-entrypoint-initdb.d"
+    - "./mysql/config:/etc/mysql/conf.d"
 volumes:
   log-app: ~
   log-infra-nginx: ~

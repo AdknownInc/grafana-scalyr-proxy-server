@@ -83,7 +83,7 @@ class ElasticScalyrConverter extends Ajax
 			$this->Respond(StatusCodes::HTTP_BAD_REQUEST);
 		}
 
-		$mid = new Middleware();
+		$mid = new Middleware(false);
 		try
 		{
 			$stuff = $mid->GrafanaToScalyrQuery($timeSeriesRequest);

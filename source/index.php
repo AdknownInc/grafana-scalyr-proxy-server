@@ -46,7 +46,7 @@ try
 }
 catch(Exception $ex)
 {
-	\Adknown\ProxyScalyr\Logging\LoggerImpl::Exception($ex);
+	\Adknown\ProxyScalyr\Logging\LoggerImpl::Exception($ex, "end message");
 	header('Content-type: application/json;charset=utf-8');
 	http_response_code(500);
 	die(json_encode(['message' => 'Unexpected error occurred. Contact your grafana administrator.']));
