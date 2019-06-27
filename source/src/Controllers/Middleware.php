@@ -272,18 +272,19 @@ class Middleware
 			switch($queryData->type)
 			{
 				case 'numeric query':
-					$grafResponse->AddTarget($this->GetNumericQueryTarget($request, $queryData));
+					$target = $this->GetNumericQueryTarget($request, $queryData);
 					break;
 				case 'complex numeric query':
 					$target = $this->GetComplexQueryTarget($request, $queryData);
-					$target->refId = $queryData->refId;
-					$grafResponse->AddTarget($target);
 					break;
 				case 'facet query':
 					throw new \Exception("facet queries not yet implemented");
 				default:
 					throw new \Exception("Unsupported query type: " . $queryData->type);
 			}
+
+			$target->refId = $queryData->refId;
+			$grafResponse->AddTarget($target);
 		}
 
 		return $grafResponse;
