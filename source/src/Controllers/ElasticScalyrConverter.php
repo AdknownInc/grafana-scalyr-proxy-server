@@ -65,6 +65,7 @@ class ElasticScalyrConverter extends Ajax
 	 */
 	protected function Post()
 	{
+		$timeSeriesRequest = null;
 		try
 		{
 			$input = file_get_contents('php://input');

@@ -224,7 +224,8 @@ class Middleware
 		$end = $request->range->GetToAsTimestamp();
 		$buckets = self::CalculateBuckets($start, $end, $queryData->secondsInterval);
 
-		$simpleExpressions = Parser::ParseComplexExpression($queryData->filter, $start, $end, $buckets, $fullVariableExpression, $this->useNumeric);
+		$parser = new Parser($queryData->divideByZeroOption);
+		$simpleExpressions = $parser->ParseComplexExpression($queryData->filter, $start, $end, $buckets, $fullVariableExpression, $this->useNumeric);
 		$individualExpressions = $simpleExpressions;
 		foreach($simpleExpressions as $key => $scalyrParams)
 		{
@@ -239,7 +240,7 @@ class Middleware
 				$simpleExpressions[$key] = $response;
 			}
 		}
-		$fullResponse = Parser::NewEvaluateExpression($fullVariableExpression, $simpleExpressions);
+		$fullResponse = $parser->NewEvaluateExpression($fullVariableExpression, $simpleExpressions);
 
 		$target = self::ConvertScalyrNumericToGrafana($fullResponse, $queryData->target, $start, $queryData->secondsInterval);
 		$target->individualQueries = $individualExpressions;

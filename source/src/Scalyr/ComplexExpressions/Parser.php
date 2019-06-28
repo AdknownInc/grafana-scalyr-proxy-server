@@ -20,12 +20,28 @@ class Parser
 	const PRECEDENCE_LEVEL_2 = 2;
 
 	const FLOAT_CUTOFF = 0.0001;
-	const DIVIDE_BY_ZERO_RESULT = -1;
+	const LEGACY_DIVIDE_BY_ZERO_RESULT = -1;
 
 	const VALUE_INDEX = 0;
 	const TIMESTAMP_INDEX = 1;
 
 	const REPLACE_PREFIX = 'var';
+
+	private $divideByZeroOption;
+
+	public function __construct($divideByZeroOption)
+	{
+		switch($divideByZeroOption)
+		{
+			case DivideByZeroOption::INFINITY:
+			case DivideByZeroOption::NEGATIVE_ONE:
+			case DivideByZeroOption::NULL:
+				$this->divideByZeroOption = $divideByZeroOption;
+				break;
+			default:
+				$this->divideByZeroOption = DivideByZeroOption::NEGATIVE_ONE;
+		}
+	}
 
 	/**
 	 * @param        $expression
@@ -34,15 +50,15 @@ class Parser
 	 * @param        $buckets
 	 * @param string $fullVariableExpression
 	 *
-	 * @param        $useNumeric
+	 * @param bool   $useNumeric Whether to make a Numeric Query request or a Time Series request to Scalyr
 	 *
 	 * @return array
 	 * @throws \Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException
 	 */
-	public static function ParseComplexExpression($expression, $start, $end, $buckets, &$fullVariableExpression, $useNumeric)
+	public function ParseComplexExpression($expression, $start, $end, $buckets, &$fullVariableExpression, $useNumeric)
 	{
 		/*
-		 * Match graph public static function calls
+		 * Match graph public function calls
 		 * Part 1
 		 * (count|rate|mean|min|max|sumPerSecond|median|fraction|p|p\\[\\d+\\]|p\\d+) match any of the graph function
 		 * keywords (One of count, rate, mean, min, max, sumPerSecond, median, fraction, p, p[##] or p##)
@@ -76,7 +92,7 @@ class Parser
 				$field = empty($matches['field']) ? '' : $matches['field'];
 				//Get the type of query based of of keyword
 
-				if ($useNumeric === true)
+				if($useNumeric === true)
 				{
 					$varArray[$varCount] = new Numeric(
 						$filter,
@@ -122,8 +138,6 @@ class Parser
 		return $varArray;
 	}
 
-
-
 	/**
 	 * infixToRPN changes infix notation equation in to an array in reverse polish notation
 	 * @see http://andreinc.net/2010/10/05/converting-infix-to-rpn-shunting-yard-algorithm/
@@ -133,7 +147,7 @@ class Parser
 	 *
 	 * @return \SplQueue the expression in RPN
 	 */
-	private static function ConvertInfixNotationToReversePolishNotation(array $inputExpressions)
+	private function ConvertInfixNotationToReversePolishNotation(array $inputExpressions)
 	{
 		$stack = new \SplStack();
 		$output = new \SplQueue();
@@ -141,11 +155,11 @@ class Parser
 		//Change iterate though infix and change the order to RPN
 		foreach($inputExpressions as $token)
 		{
-			if(self::isOperator($token))
+			if($this->isOperator($token))
 			{
-				while(!$stack->isEmpty() && self::isOperator($stack->top()))
+				while(!$stack->isEmpty() && $this->isOperator($stack->top()))
 				{
-					if(self::precedenceCompare($token, $stack->top()) <= 0)
+					if($this->precedenceCompare($token, $stack->top()) <= 0)
 					{
 						$output->push($stack->pop());
 						continue;
@@ -193,7 +207,7 @@ class Parser
 	 *
 	 * @return bool whether the input is an operator
 	 */
-	private static function isOperator($inputOperator)
+	private function isOperator($inputOperator)
 	{
 		switch($inputOperator)
 		{
@@ -215,7 +229,7 @@ class Parser
 	 *
 	 * @return int a number representing the precedence level
 	 */
-	private static function precedenceCompare($firstToken, $secondToken)
+	private function precedenceCompare($firstToken, $secondToken)
 	{
 		//Higher precedence operators
 		$higherPrecedence = [
@@ -239,21 +253,21 @@ class Parser
 	 *
 	 * @return mixed a single object representing the result of the expression
 	 */
-	public static function NewEvaluateExpression($expression, $varArray)
+	public function NewEvaluateExpression($expression, $varArray)
 	{
 		$expression = str_replace([" ", "v", "a", "r"], "", $expression);
 
-		$rpnExpression = self::ConvertInfixNotationToReversePolishNotation(str_split($expression));
+		$rpnExpression = $this->ConvertInfixNotationToReversePolishNotation(str_split($expression));
 
 		LoggerImpl::DebugLog('', $rpnExpression);
 
 		$stack = new \SplStack();
 		foreach($rpnExpression as $token)
 		{
-			if(self::isOperator($token))
+			if($this->isOperator($token))
 			{
 				//Operator
-				$result = self::performOperation($token, $stack->pop(), $stack->pop());
+				$result = $this->performOperation($token, $stack->pop(), $stack->pop());
 				$stack->push($result);
 			}
 			else
@@ -270,47 +284,66 @@ class Parser
 	/**
 	 * performOperation calls the appropriate equation logic given the operator
 	 *
-	 * @param string    $operator  operator  of the equation
+	 * @param string              $operator  operator  of the equation
 	 * @param NumericResponse|int $firstVar  first operand of the equation
 	 * @param NumericResponse|int $secondVar second operand of the equation
 	 *
 	 * @return array|float|int|string a single object representing the result of the expression
 	 */
-	private static function performOperation($operator, $firstVar, $secondVar)
+	private function performOperation($operator, $firstVar, $secondVar)
 	{
 		switch($operator)
 		{
 			case '+':
-				return self::logic($firstVar, $secondVar, self::class . '::add');
+				return $this->logic($firstVar, $secondVar, self::class . '::add');
 			case '-':
-				return self::logic($firstVar, $secondVar, self::class . '::sub');
+				return $this->logic($firstVar, $secondVar, self::class . '::sub');
 
 			case '/':
-				return self::logic($firstVar, $secondVar, self::class . '::div');
+				return $this->logic($firstVar, $secondVar, self::class . '::div');
 
 			case '*':
-				return self::logic($firstVar, $secondVar, self::class . '::mul');
+				return $this->logic($firstVar, $secondVar, self::class . '::mul');
 			default:
 				return -1;
 		}
 	}
 
-	private static function add($a, $b)
+	private function add($a, $b)
 	{
 		return $a + $b;
 	}
 
-	private static function sub($a, $b)
+	private function sub($a, $b)
 	{
 		return $a - $b;
 	}
 
-	private static function div($a, $b)
+	private function div($a, $b)
 	{
-		return ($b === 0 || $b < self::FLOAT_CUTOFF) ? self::DIVIDE_BY_ZERO_RESULT : $a / $b;
+		if
+		(
+			$b === 0 ||
+			($b < self::FLOAT_CUTOFF && $b > (-1 * self::FLOAT_CUTOFF))
+		)
+		{
+			switch($this->divideByZeroOption)
+			{
+				case DivideByZeroOption::INFINITY:
+					return PHP_INT_MAX;
+				case DivideByZeroOption::NEGATIVE_ONE:
+					return self::LEGACY_DIVIDE_BY_ZERO_RESULT;
+				case DivideByZeroOption::NULL:
+					return null;
+				default:
+					return self::LEGACY_DIVIDE_BY_ZERO_RESULT;
+			}
+		}
+
+		return $a / $b;
 	}
 
-	private static function mul($a, $b)
+	private function mul($a, $b)
 	{
 		return $a * $b;
 	}
@@ -324,7 +357,7 @@ class Parser
 	 *
 	 * @return NumericResponse|int a single object representing the result of the expression
 	 */
-	private static function logic($firstVar, $secondVar, Callable $op)
+	private function logic($firstVar, $secondVar, Callable $op)
 	{
 		//Both are queries
 		if($firstVar instanceof NumericResponse && $secondVar instanceof NumericResponse)

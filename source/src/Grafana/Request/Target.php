@@ -50,4 +50,8 @@ class Target
 	public $target;
 	public $type;
 	public $expression;
+	/**
+	 * @var string Which option to use for dividing by zero in complex expressions
+	 */
+	public $divideByZeroOption;
 }
