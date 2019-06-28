@@ -53,7 +53,7 @@ class Query extends Ajax
 		}
 		catch (\Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException $ex)
 		{
-			LoggerImpl::Exception($ex, 'Bad Buckets Exception', $timeSeriesRequest->GetLoggingInfo());
+			LoggerImpl::Exception($ex, 'Bad Buckets Exception: ', $timeSeriesRequest->GetLoggingInfo());
 			$message = "Selected time interval too small for selected time range. Logic to make multiple Scalyr requests to get the required data points not yet implementeed. " . $ex->getMessage();
 			$this->RespondError($message);
 		}
