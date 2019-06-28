@@ -11,6 +11,7 @@ namespace Adknown\ProxyScalyr\Controllers;
 use Adknown\ProxyScalyr\Grafana\Request\Target;
 use Adknown\ProxyScalyr\Grafana\Response\Query\TimeSeriesTarget;
 use Adknown\ProxyScalyr\Scalyr\ComplexExpressions\Parser;
+use Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException;
 use Adknown\ProxyScalyr\Scalyr\Request\Numeric;
 use Adknown\ProxyScalyr\Scalyr\Request\TimeSeriesQuery;
 use Adknown\ProxyScalyr\Scalyr\Response\FacetResponse;
@@ -298,12 +299,22 @@ class Middleware
 	 * @param int $intervalSeconds
 	 *
 	 * @return int
+	 * @throws BadBucketsException
 	 */
 	public static function CalculateBuckets(int $start, int $end, int $intervalSeconds)
 	{
 		$timeframe = $end - $start;
+		$buckets = (int)($timeframe / $intervalSeconds);
+		if ($timeframe > 0 && $buckets === 0)
+		{
+			$buckets = 1;
+		}
+		if ($buckets < 1)
+		{
+			throw new BadBucketsException($buckets, "Calculated buckets returned less than 1 bucket with the the parameters of 'start':$start, 'end':$end, 'intervalSeconds':$intervalSeconds");
+		}
 
-		return (int)($timeframe / $intervalSeconds);
+		return $buckets;
 	}
 
 	/**

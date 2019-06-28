@@ -34,6 +34,8 @@ class Parser
 	 * @param        $buckets
 	 * @param string $fullVariableExpression
 	 *
+	 * @param        $useNumeric
+	 *
 	 * @return array
 	 * @throws \Adknown\ProxyScalyr\Scalyr\Request\Exception\BadBucketsException
 	 */
