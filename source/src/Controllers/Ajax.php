@@ -152,6 +152,9 @@ abstract class Ajax
 		}
 		header('Content-type: application/json;charset=utf-8');
 		http_response_code($statusCode);
+		if (function_exists('memprof_enable')) {
+			memprof_dump_pprof(fopen("/tmp/profile.heap", "w"));
+		}
 		die($json);
 	}
 }

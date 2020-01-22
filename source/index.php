@@ -14,6 +14,9 @@ header("Access-Control-Allow-Origin", "*");
 
 try
 {
+	if (function_exists('memprof_enable')) {
+		memprof_enable();
+	}
 	switch($parsed['path'])
 	{
 		//Just to satisfy the test when setting the datasource
