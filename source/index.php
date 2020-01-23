@@ -14,8 +14,12 @@ header("Access-Control-Allow-Origin", "*");
 
 try
 {
-	if (function_exists('memprof_enable')) {
-		memprof_enable();
+	if(getenv("GSPS_PPROF") !== false)
+	{
+		if(function_exists('memprof_enable'))
+		{
+			memprof_enable();
+		}
 	}
 	switch($parsed['path'])
 	{
