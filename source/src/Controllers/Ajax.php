@@ -156,7 +156,7 @@ abstract class Ajax
 		if(getenv("GSPS_PPROF") !== false)
 		{
 			if (function_exists('memprof_enable')) {
-				memprof_dump_pprof(fopen("/tmp/profile.heap", "w"));
+				memprof_dump_pprof(fopen(sys_get_temp_dir() . DIRECTORY_SEPARATOR . "profile.heap", "w"));
 			}
 		}
 		die($json);
