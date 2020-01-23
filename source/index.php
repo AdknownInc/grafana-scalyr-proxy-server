@@ -14,6 +14,13 @@ header("Access-Control-Allow-Origin", "*");
 
 try
 {
+	if(getenv("GSPS_PPROF") !== false)
+	{
+		if(function_exists('memprof_enable'))
+		{
+			memprof_enable();
+		}
+	}
 	switch($parsed['path'])
 	{
 		//Just to satisfy the test when setting the datasource
